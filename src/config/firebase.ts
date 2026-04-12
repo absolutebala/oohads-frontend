@@ -14,6 +14,9 @@ const firebaseConfig = {
 
 const isDevelopment = process.env.REACT_APP_ENVIRONMENT === 'development';
 
+/** Whether Firebase was successfully initialized. False when env vars are absent. */
+export let firebaseReady = false;
+
 let app: FirebaseApp;
 let auth: Auth;
 let firestore: Firestore;
@@ -24,13 +27,23 @@ try {
   auth = getAuth(app);
   firestore = getFirestore(app);
   storage = getStorage(app);
+  firebaseReady = true;
 
   if (isDevelopment) {
     console.log('[Firebase] Initialized successfully in development mode');
   }
 } catch (error) {
-  console.error('[Firebase] Initialization failed:', error);
-  throw new Error('Firebase initialization failed. Check your environment variables.');
+  console.warn(
+    '[Firebase] Initialization skipped – environment variables not configured. ' +
+    'Auth and database features will be unavailable.',
+    error,
+  );
+  // These stubs are intentionally uninitialized; all callers must guard with
+  // `firebaseReady` before invoking Firebase SDK methods.
+  app = null as unknown as FirebaseApp;
+  auth = null as unknown as Auth;
+  firestore = null as unknown as Firestore;
+  storage = null as unknown as FirebaseStorage;
 }
 
 export { app, auth, firestore, storage, isDevelopment };

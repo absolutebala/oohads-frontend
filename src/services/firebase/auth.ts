@@ -146,9 +146,19 @@ export async function refreshIdToken(): Promise<string | null> {
 
 /**
  * Subscribe to auth state changes.
+ * Returns a no-op unsubscribe if Firebase auth is not properly initialized.
  */
 export function onAuthStateChange(callback: (user: User | null) => void) {
-  return onAuthStateChanged(auth, callback);
+  try {
+    if (!auth || !('onAuthStateChanged' in auth)) {
+      callback(null);
+      return () => {};
+    }
+    return onAuthStateChanged(auth, callback);
+  } catch {
+    callback(null);
+    return () => {};
+  }
 }
 
 // ── Logout ────────────────────────────────────────────────────────────────────
