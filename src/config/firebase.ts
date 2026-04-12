@@ -29,8 +29,12 @@ try {
     console.log('[Firebase] Initialized successfully in development mode');
   }
 } catch (error) {
-  console.error('[Firebase] Initialization failed:', error);
-  throw new Error('Firebase initialization failed. Check your environment variables.');
+  console.warn('[Firebase] Initialization skipped – environment variables not set. Auth features will be unavailable.', error);
+  // Provide stub exports so the app can render without crashing
+  app = {} as FirebaseApp;
+  auth = {} as Auth;
+  firestore = {} as Firestore;
+  storage = {} as FirebaseStorage;
 }
 
 export { app, auth, firestore, storage, isDevelopment };
