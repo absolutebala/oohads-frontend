@@ -1,0 +1,28 @@
+/* AdRide Color Palette */
+:root {
+    --color-primary: #FF6A00;  /* Example primary color */
+    --color-secondary: #00A2FF;  /* Example secondary color */
+    --color-tertiary: #FF007A;  /* Example tertiary color */
+}
+
+/* Font Imports */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&display=swap');
+
+/* Base Styling */
+body {
+    font-family: 'DM Sans', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-primary);
+    color: #333;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Syne', sans-serif;
+}
+
+p {
+    line-height: 1.5;
+    margin-bottom: 1.5em;
+}
