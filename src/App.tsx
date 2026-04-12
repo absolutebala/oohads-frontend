@@ -5,6 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { Box, AppBar, Toolbar, Typography, Button } from '@mui/material';
 import theme from './theme/theme';
 import './styles/global.css';
+import { AuthProvider } from './context/AuthContext';
 
 import Login from './components/Auth/Login';
 import OwnerOnboarding from './components/OnBoarding/OwnerOnboarding';
@@ -60,19 +61,21 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <BrowserRouter>
-        <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-          <NavBar />
-          <Box sx={{ flex: 1 }}>
-            <Routes>
-              <Route path="/" element={<Login />} />
-              <Route path="/owner-onboarding" element={<OwnerOnboarding />} />
-              <Route path="/admin" element={<AdminOwnerOnboarding />} />
-              <Route path="/campaign" element={<CampaignBooking />} />
-              <Route path="/dashboard" element={<AdvertiserDashboard />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+        <AuthProvider>
+          <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <NavBar />
+            <Box sx={{ flex: 1 }}>
+              <Routes>
+                <Route path="/" element={<Login />} />
+                <Route path="/owner-onboarding" element={<OwnerOnboarding />} />
+                <Route path="/admin" element={<AdminOwnerOnboarding />} />
+                <Route path="/campaign" element={<CampaignBooking />} />
+                <Route path="/dashboard" element={<AdvertiserDashboard />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Box>
           </Box>
-        </Box>
+        </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
   );
