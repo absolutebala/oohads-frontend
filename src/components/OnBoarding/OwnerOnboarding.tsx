@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -19,6 +19,14 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import TwoWheelerIcon from '@mui/icons-material/TwoWheeler';
+import { firebaseReady } from '../../config/firebase';
+import { createOwnerProfile } from '../../services/firebase/firestore';
+import {
+  uploadVehiclePhoto,
+  uploadRcDocument,
+  uploadInsuranceDocument,
+} from '../../services/firebase/storage';
+import { useAuthContext } from '../../context/AuthContext';
 
 const BRAND = '#E8521A';
 const AREAS = [
@@ -47,10 +55,20 @@ interface DocsAndPricing {
 }
 
 export default function OwnerOnboarding() {
+  const { firebaseUser, userProfile } = useAuthContext();
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Actual File objects for uploads
+  const vehiclePhotoInputRef = useRef<HTMLInputElement>(null);
+  const rcInputRef = useRef<HTMLInputElement>(null);
+  const insuranceInputRef = useRef<HTMLInputElement>(null);
+  const [vehiclePhotoFile, setVehiclePhotoFile] = useState<File | null>(null);
+  const [rcFile, setRcFile] = useState<File | null>(null);
+  const [insuranceFile, setInsuranceFile] = useState<File | null>(null);
 
   const [personal, setPersonal] = useState<PersonalDetails>({ name: '', phone: '', email: '' });
   const [vehicle, setVehicle] = useState<VehicleDetails>({
@@ -65,6 +83,18 @@ export default function OwnerOnboarding() {
     monthlyRate: '',
     upiId: '',
   });
+
+  // Pre-fill personal details from auth context
+  useEffect(() => {
+    if (userProfile) {
+      setPersonal((prev) => ({
+        ...prev,
+        name: prev.name || userProfile.name || '',
+        phone: prev.phone || userProfile.phone || '',
+        email: prev.email || userProfile.email || '',
+      }));
+    }
+  }, [userProfile]);
 
   const steps = ['Personal Details', 'Vehicle Details', 'Documents & Pricing', 'Review & Submit'];
   const progress = ((step) / (steps.length - 1)) * 100;
@@ -88,11 +118,36 @@ export default function OwnerOnboarding() {
   };
 
   const handleFileSimulate = (field: keyof DocsAndPricing | 'photoFileName') => {
-    const fakeFileName = `file_${Date.now()}.pdf`;
     if (field === 'photoFileName') {
-      setVehicle((prev) => ({ ...prev, photoFileName: `vehicle_photo_${Date.now()}.jpg` }));
-    } else {
-      setDocs((prev) => ({ ...prev, [field]: fakeFileName }));
+      vehiclePhotoInputRef.current?.click();
+    } else if (field === 'rcFileName') {
+      rcInputRef.current?.click();
+    } else if (field === 'insuranceFileName') {
+      insuranceInputRef.current?.click();
+    }
+  };
+
+  const handleVehiclePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setVehiclePhotoFile(file);
+      setVehicle((prev) => ({ ...prev, photoFileName: file.name }));
+    }
+  };
+
+  const handleRcFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setRcFile(file);
+      setDocs((prev) => ({ ...prev, rcFileName: file.name }));
+    }
+  };
+
+  const handleInsuranceFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setInsuranceFile(file);
+      setDocs((prev) => ({ ...prev, insuranceFileName: file.name }));
     }
   };
 
@@ -125,12 +180,65 @@ export default function OwnerOnboarding() {
     setStep((s) => s - 1);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setLoading(true);
-    setTimeout(() => {
+    setError('');
+
+    if (!firebaseReady) {
+      // Mock fallback when Firebase is not configured
+      setTimeout(() => {
+        setLoading(false);
+        setSubmitted(true);
+      }, 1500);
+      return;
+    }
+
+    try {
+      const userId = firebaseUser?.uid ?? `owner_${Date.now()}`;
+      const ownerId = `owner_${userId}`;
+      setUploadProgress(0);
+
+      let vehiclePhotoUrl = '';
+      let rcDocumentUrl = '';
+      let insuranceDocumentUrl = '';
+
+      if (vehiclePhotoFile) {
+        const result = await uploadVehiclePhoto(ownerId, vehiclePhotoFile, setUploadProgress);
+        vehiclePhotoUrl = result.downloadUrl;
+      }
+      if (rcFile) {
+        const result = await uploadRcDocument(ownerId, rcFile, setUploadProgress);
+        rcDocumentUrl = result.downloadUrl;
+      }
+      if (insuranceFile) {
+        const result = await uploadInsuranceDocument(ownerId, insuranceFile, setUploadProgress);
+        insuranceDocumentUrl = result.downloadUrl;
+      }
+
+      await createOwnerProfile({
+        id: ownerId,
+        userId,
+        name: personal.name,
+        phone: personal.phone,
+        vehicleType: vehicle.type as 'auto' | 'taxi',
+        registrationNumber: vehicle.registrationNumber,
+        operatingAreas: vehicle.operatingAreas,
+        vehiclePhotoUrl,
+        rcDocumentUrl,
+        insuranceDocumentUrl,
+        monthlyRate: Number(docs.monthlyRate),
+        upiId: docs.upiId,
+        verificationStatus: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+
       setLoading(false);
       setSubmitted(true);
-    }, 1500);
+    } catch (err) {
+      setLoading(false);
+      setError(err instanceof Error ? err.message : 'Failed to submit. Please try again.');
+    }
   };
 
   if (submitted) {
@@ -164,6 +272,28 @@ export default function OwnerOnboarding() {
 
   return (
     <Box sx={{ minHeight: 'calc(100vh - 64px)', background: '#F5F2EF', p: { xs: 2, md: 4 } }}>
+      {/* Hidden file inputs */}
+      <input
+        ref={vehiclePhotoInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        style={{ display: 'none' }}
+        onChange={handleVehiclePhotoSelect}
+      />
+      <input
+        ref={rcInputRef}
+        type="file"
+        accept="application/pdf,image/jpeg,image/png"
+        style={{ display: 'none' }}
+        onChange={handleRcFileSelect}
+      />
+      <input
+        ref={insuranceInputRef}
+        type="file"
+        accept="application/pdf,image/jpeg,image/png"
+        style={{ display: 'none' }}
+        onChange={handleInsuranceFileSelect}
+      />
       <Box sx={{ maxWidth: 680, mx: 'auto' }}>
         {/* Header */}
         <Box sx={{ mb: 3 }}>
@@ -194,6 +324,12 @@ export default function OwnerOnboarding() {
         </Box>
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {loading && uploadProgress > 0 && uploadProgress < 100 && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Uploading files... {uploadProgress}%
+            <LinearProgress variant="determinate" value={uploadProgress} sx={{ mt: 1, height: 4, borderRadius: 2 }} />
+          </Alert>
+        )}
 
         <Card sx={{ p: { xs: 2.5, md: 4 }, border: '1px solid rgba(26,21,16,0.08)' }}>
           {/* Step 0: Personal Details */}

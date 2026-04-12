@@ -206,6 +206,18 @@ export async function getCampaignsByStatus(status: Campaign['status']): Promise<
   return snap.docs.map((d) => snapToCampaign(d.id, d.data()));
 }
 
+export async function getAllOwners(): Promise<OwnerProfile[]> {
+  const ref = collection(firestore, COLLECTIONS.OWNERS);
+  const snap = await getDocs(ref);
+  return snap.docs.map((d) => snapToOwnerProfile(d.id, d.data()));
+}
+
+export async function getAllCampaigns(): Promise<Campaign[]> {
+  const ref = collection(firestore, COLLECTIONS.CAMPAIGNS);
+  const snap = await getDocs(ref);
+  return snap.docs.map((d) => snapToCampaign(d.id, d.data()));
+}
+
 // ── Admin Users ───────────────────────────────────────────────────────────────
 
 export async function getAdminUser(userId: string): Promise<AdminUser | null> {

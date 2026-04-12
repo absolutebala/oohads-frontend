@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -13,6 +14,15 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import GoogleIcon from '@mui/icons-material/Google';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import CampaignIcon from '@mui/icons-material/Campaign';
+import { User } from 'firebase/auth';
+import { firebaseReady } from '../../config/firebase';
+import {
+  sendPhoneOtp,
+  verifyPhoneOtp,
+  signInWithGoogle,
+  createOrUpdateUserProfile,
+} from '../../services/firebase/auth';
+import { useAuthContext } from '../../context/AuthContext';
 
 type Role = 'advertiser' | 'owner';
 type Step = 'role' | 'phone' | 'otp' | 'profile' | 'success';
@@ -27,6 +37,8 @@ interface FormData {
 const BRAND = '#E8521A';
 
 export default function Login() {
+  const navigate = useNavigate();
+  const { refreshUserProfile } = useAuthContext();
   const [role, setRole] = useState<Role>('advertiser');
   const [step, setStep] = useState<Step>('role');
   const [formData, setFormData] = useState<FormData>({
@@ -37,6 +49,8 @@ export default function Login() {
   });
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
+  // Track the Firebase user obtained after OTP/Google verification
+  const [verifiedUser, setVerifiedUser] = useState<User | null>(null);
   const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,49 +77,125 @@ export default function Login() {
     }
   };
 
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     if (formData.phone.length !== 10 || !/^\d{10}$/.test(formData.phone)) {
       setError('Please enter a valid 10-digit phone number');
       return;
     }
     setLoading(true);
-    setTimeout(() => {
+    setError('');
+
+    if (!firebaseReady) {
+      // Mock fallback when Firebase is not configured
+      setTimeout(() => {
+        setLoading(false);
+        setStep('otp');
+      }, 1000);
+      return;
+    }
+
+    try {
+      await sendPhoneOtp(`+91${formData.phone}`);
       setLoading(false);
       setStep('otp');
-    }, 1000);
+    } catch (err) {
+      setLoading(false);
+      setError(err instanceof Error ? err.message : 'Failed to send OTP. Please try again.');
+    }
   };
 
-  const handleVerifyOtp = () => {
+  const handleVerifyOtp = async () => {
     const otpValue = otpDigits.join('');
     if (otpValue.length !== 6) {
       setError('Please enter all 6 OTP digits');
       return;
     }
     setLoading(true);
-    setTimeout(() => {
+    setError('');
+
+    if (!firebaseReady) {
+      // Mock fallback
+      setTimeout(() => {
+        setLoading(false);
+        setStep('profile');
+      }, 1000);
+      return;
+    }
+
+    try {
+      const credential = await verifyPhoneOtp(otpValue);
+      setVerifiedUser(credential.user);
       setLoading(false);
       setStep('profile');
-    }, 1000);
+    } catch (err) {
+      setLoading(false);
+      setError(err instanceof Error ? err.message : 'Invalid OTP. Please try again.');
+    }
   };
 
-  const handleCompleteProfile = () => {
+  const handleCompleteProfile = async () => {
     if (!formData.name.trim()) {
       setError('Please enter your name');
       return;
     }
     setLoading(true);
-    setTimeout(() => {
+    setError('');
+
+    if (!firebaseReady) {
+      // Mock fallback
+      setTimeout(() => {
+        setLoading(false);
+        setStep('success');
+      }, 1000);
+      return;
+    }
+
+    try {
+      const user = verifiedUser;
+      if (user) {
+        await createOrUpdateUserProfile(user, formData.name, role, formData.email || undefined);
+        await refreshUserProfile();
+      }
       setLoading(false);
       setStep('success');
-    }, 1000);
+    } catch (err) {
+      setLoading(false);
+      setError(err instanceof Error ? err.message : 'Failed to save profile. Please try again.');
+    }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setLoading(true);
-    setTimeout(() => {
+    setError('');
+
+    if (!firebaseReady) {
+      // Mock fallback
+      setTimeout(() => {
+        setLoading(false);
+        setStep('profile');
+      }, 1200);
+      return;
+    }
+
+    try {
+      const credential = await signInWithGoogle();
+      const user = credential.user;
+      setVerifiedUser(user);
+      const displayName = user.displayName ?? formData.name;
+      if (displayName) {
+        await createOrUpdateUserProfile(user, displayName, role, user.email ?? undefined);
+        await refreshUserProfile();
+        setFormData((prev) => ({ ...prev, name: displayName }));
+        setLoading(false);
+        setStep('success');
+      } else {
+        setLoading(false);
+        setStep('profile');
+      }
+    } catch (err) {
       setLoading(false);
-      setStep('profile');
-    }, 1200);
+      setError(err instanceof Error ? err.message : 'Google sign-in failed. Please try again.');
+    }
   };
 
   const brandGradient = `linear-gradient(135deg, #1A1510 0%, #2D2520 100%)`;
@@ -118,6 +208,8 @@ export default function Login() {
         minHeight: 'calc(100vh - 64px)',
       }}
     >
+      {/* reCAPTCHA container (invisible, required for phone auth) */}
+      <div id="recaptcha-container" />
       {/* Left branding panel */}
       <Box
         sx={{
@@ -434,19 +526,21 @@ export default function Login() {
                   <Button
                     fullWidth
                     variant="contained"
-                    href="/owner-onboarding"
+                    component={Link}
+                    to="/owner-onboarding"
                   >
                     Complete Vehicle Registration →
                   </Button>
                 ) : (
-                  <Button fullWidth variant="contained" href="/campaign">
+                  <Button fullWidth variant="contained" component={Link} to="/campaign">
                     Start a Campaign →
                   </Button>
                 )}
                 <Button
                   fullWidth
                   variant="outlined"
-                  href="/dashboard"
+                  component={Link}
+                  to="/dashboard"
                   sx={{ borderColor: 'rgba(26,21,16,0.2)', color: '#1A1510' }}
                 >
                   Go to Dashboard
