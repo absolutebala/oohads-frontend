@@ -150,8 +150,7 @@ export async function refreshIdToken(): Promise<string | null> {
  */
 export function onAuthStateChange(callback: (user: User | null) => void) {
   try {
-    if (!auth || typeof (auth as { onAuthStateChanged?: unknown }).onAuthStateChanged !== 'function') {
-      // Firebase not initialized – immediately call back with null and return no-op
+    if (!auth || !('onAuthStateChanged' in auth)) {
       callback(null);
       return () => {};
     }

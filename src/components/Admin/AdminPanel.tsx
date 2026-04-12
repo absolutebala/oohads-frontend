@@ -53,6 +53,7 @@ ChartJS.register(
 
 const BRAND = '#E8521A';
 const AREAS = ['Anna Nagar', 'T. Nagar', 'Velachery', 'Tambaram', 'Chromepet', 'Porur', 'Adyar', 'Mylapore'];
+const PHONE_REGEX = /^\d{10}$/;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -250,7 +251,7 @@ function OwnersView({
 
   const validate = () => {
     if (!form.name.trim()) return 'Name is required';
-    if (!/^\d{10}$/.test(form.phone)) return 'Valid 10-digit phone is required';
+    if (!PHONE_REGEX.test(form.phone)) return 'Valid 10-digit phone is required';
     if (!form.vehicleType) return 'Vehicle type is required';
     if (!form.registrationNumber.trim()) return 'Registration number is required';
     if (!form.area) return 'Area is required';
