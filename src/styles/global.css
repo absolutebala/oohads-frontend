@@ -1,28 +1,61 @@
-/* AdRide Color Palette */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+/* ─── AdRide Design System ─── */
 :root {
-    --color-primary: #FF6A00;  /* Example primary color */
-    --color-secondary: #00A2FF;  /* Example secondary color */
-    --color-tertiary: #FF007A;  /* Example tertiary color */
+  --brand: #E8521A;
+  --brand-dark: #B83D0F;
+  --brand-light: #FDF0EB;
+  --ink: #1A1510;
+  --muted: #6B5E54;
+  --surface: #F5F2EF;
+  --card: #FFFFFF;
+  --success: #27500A;
+  --success-bg: #EAF3DE;
+  --warning: #633806;
+  --warning-bg: #FAEEDA;
+  --border: rgba(26, 21, 16, 0.10);
 }
 
-/* Font Imports */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&display=swap');
+* {
+  box-sizing: border-box;
+}
 
-/* Base Styling */
-body {
-    font-family: 'DM Sans', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: var(--color-primary);
-    color: #333;
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'DM Sans', sans-serif;
+  background-color: var(--surface);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Syne', sans-serif;
+  font-family: 'Syne', sans-serif;
+  margin: 0;
 }
 
-p {
-    line-height: 1.5;
-    margin-bottom: 1.5em;
+a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(26, 21, 16, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(26, 21, 16, 0.35);
 }
