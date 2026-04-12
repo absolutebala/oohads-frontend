@@ -493,7 +493,11 @@ function OwnersView({
                           const firestoreStatus = newStatus === 'active' ? 'verified' : 'rejected';
                           setOwners((prev) => prev.map((o) => o.id === owner.id ? { ...o, status: newStatus } : o));
                           if (firebaseReady) {
-                            updateOwnerProfile(owner.id, { verificationStatus: firestoreStatus, updatedAt: new Date().toISOString() }).catch(() => {});
+                            updateOwnerProfile(owner.id, { verificationStatus: firestoreStatus, updatedAt: new Date().toISOString() })
+                              .catch(() => {
+                                // Revert UI state on failure
+                                setOwners((prev) => prev.map((o) => o.id === owner.id ? { ...o, status: owner.status } : o));
+                              });
                           }
                         }}
                         sx={{ background: ownerStatusConfig[owner.status].bg, color: ownerStatusConfig[owner.status].color, fontWeight: 600, fontSize: '0.65rem', cursor: 'pointer' }} />
@@ -523,9 +527,14 @@ function OwnersView({
 
 function CampaignsView({ campaigns, setCampaigns }: { campaigns: CampaignEntry[]; setCampaigns: React.Dispatch<React.SetStateAction<CampaignEntry[]>> }) {
   const updateStatus = (id: string, status: CampaignEntry['status']) => {
-    setCampaigns((prev) => prev.map((c) => c.id === id ? { ...c, status } : c));
+    const prev = campaigns.find((c) => c.id === id)?.status;
+    setCampaigns((list) => list.map((c) => c.id === id ? { ...c, status } : c));
     if (firebaseReady) {
-      updateCampaign(id, { status: adminStatusToFirestore(status), updatedAt: new Date().toISOString() }).catch(() => {});
+      updateCampaign(id, { status: adminStatusToFirestore(status), updatedAt: new Date().toISOString() })
+        .catch(() => {
+          // Revert UI state on failure
+          if (prev) setCampaigns((list) => list.map((c) => c.id === id ? { ...c, status: prev } : c));
+        });
     }
   };
 

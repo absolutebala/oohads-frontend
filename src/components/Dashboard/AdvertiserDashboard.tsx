@@ -173,9 +173,8 @@ export default function AdvertiserDashboard() {
     const unsubscribe = listenToAdvertiserCampaigns(
       firebaseUser.uid,
       (firestoreCampaigns) => {
-        if (firestoreCampaigns.length > 0) {
-          setCampaigns(firestoreCampaigns.map(firestoreToDashboardCampaign));
-        }
+        // Always update from Firestore; use empty array when no campaigns yet
+        setCampaigns(firestoreCampaigns.map(firestoreToDashboardCampaign));
         setDataLoading(false);
       },
       () => {

@@ -181,14 +181,17 @@ export default function Login() {
       const credential = await signInWithGoogle();
       const user = credential.user;
       setVerifiedUser(user);
-      const displayName = user.displayName ?? formData.name;
+      const displayName = user.displayName;
       if (displayName) {
+        // Google provided a name — save profile and go to success
         await createOrUpdateUserProfile(user, displayName, role, user.email ?? undefined);
         await refreshUserProfile();
         setFormData((prev) => ({ ...prev, name: displayName }));
         setLoading(false);
         setStep('success');
       } else {
+        // No display name from Google — let user enter their name
+        if (user.email) setFormData((prev) => ({ ...prev, email: user.email as string }));
         setLoading(false);
         setStep('profile');
       }
