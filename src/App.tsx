@@ -47,12 +47,8 @@ function NavBar() {
         { label: 'Dashboard', path: '/dashboard' },
       ];
     }
-    // advertiser (default)
-    return [
-      { label: 'Home', path: '/' },
-      { label: 'Book Campaign', path: '/campaign' },
-      { label: 'Dashboard', path: '/dashboard' },
-    ];
+    // advertiser — no nav links, only logo + profile/logout
+    return [];
   })();
 
   return (
@@ -67,7 +63,7 @@ function NavBar() {
       <Toolbar sx={{ gap: 1, flexWrap: 'wrap' }}>
         <Typography
           component={Link}
-          to="/"
+          to={role === 'advertiser' ? '/dashboard' : '/'}
           variant="h6"
           sx={{ fontFamily: '"Syne", sans-serif', fontWeight: 800, mr: 2, textDecoration: 'none', color: 'inherit' }}
         >
