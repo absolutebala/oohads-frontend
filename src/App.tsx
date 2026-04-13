@@ -17,18 +17,44 @@ import AdminPanel from './components/Admin/AdminPanel';
 import CampaignBooking from './components/Campaigns/CampaignBooking';
 import AdvertiserDashboard from './components/Dashboard/AdvertiserDashboard';
 
-const NAV_ITEMS = [
-  { label: 'Home', path: '/' },
-  { label: 'Login', path: '/login' },
-  { label: 'Owner Onboarding', path: '/owner-onboarding' },
-  { label: 'Admin Panel', path: '/admin' },
-  { label: 'Book Campaign', path: '/campaign' },
-  { label: 'Dashboard', path: '/dashboard' },
-];
+// ── NavBar ────────────────────────────────────────────────────────────────────
 
 function NavBar() {
   const location = useLocation();
   const { isAuthenticated, userProfile, logout } = useAuthContext();
+
+  const role = userProfile?.role;
+
+  // Determine which nav items to show based on auth state and role
+  const navItems: { label: string; path: string }[] = (() => {
+    if (!isAuthenticated || !firebaseReady) {
+      return [
+        { label: 'Home', path: '/' },
+        { label: 'Login', path: '/login' },
+      ];
+    }
+    if (role === 'admin') {
+      return [
+        { label: 'Home', path: '/' },
+        { label: 'Admin Panel', path: '/admin' },
+        { label: 'Dashboard', path: '/dashboard' },
+      ];
+    }
+    if (role === 'owner') {
+      return [
+        { label: 'Home', path: '/' },
+        { label: 'Owner Onboarding', path: '/owner-onboarding' },
+        { label: 'Dashboard', path: '/dashboard' },
+      ];
+    }
+    // advertiser (default)
+    return [
+      { label: 'Home', path: '/' },
+      { label: 'Book Campaign', path: '/campaign' },
+      { label: 'Dashboard', path: '/dashboard' },
+    ];
+  })();
+
   return (
     <AppBar
       position="static"
@@ -47,7 +73,7 @@ function NavBar() {
         >
           Ad<span style={{ color: '#E8521A' }}>Ride</span>
         </Typography>
-        {NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <Button
             key={item.path}
             component={Link}
@@ -88,12 +114,14 @@ function NavBar() {
   );
 }
 
+// ── Route Guards ──────────────────────────────────────────────────────────────
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  adminOnly?: boolean;
+  allowedRoles?: Array<'advertiser' | 'owner' | 'admin'>;
 }
 
-function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
+function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, userProfile } = useAuthContext();
 
   if (isLoading) {
@@ -108,10 +136,39 @@ function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
   if (!firebaseReady) return <>{children}</>;
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (adminOnly && userProfile?.role !== 'admin') return <Navigate to="/" replace />;
+
+  if (allowedRoles && userProfile && !allowedRoles.includes(userProfile.role)) {
+    // Redirect to role-appropriate home instead of a blank 403
+    if (userProfile.role === 'admin') return <Navigate to="/admin" replace />;
+    if (userProfile.role === 'owner') return <Navigate to="/owner-onboarding" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return <>{children}</>;
 }
+
+/** Redirects already-authenticated users away from the login page */
+function LoginRoute() {
+  const { isAuthenticated, isLoading, userProfile } = useAuthContext();
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 64px)' }}>
+        <CircularProgress sx={{ color: '#E8521A' }} />
+      </Box>
+    );
+  }
+
+  if (isAuthenticated && firebaseReady) {
+    if (userProfile?.role === 'admin') return <Navigate to="/admin" replace />;
+    if (userProfile?.role === 'owner') return <Navigate to="/owner-onboarding" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Login />;
+}
+
+// ── App ───────────────────────────────────────────────────────────────────────
 
 function App() {
   return (
@@ -124,11 +181,39 @@ function App() {
             <Box sx={{ flex: 1 }}>
               <Routes>
                 <Route path="/" element={<Homepage />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/owner-onboarding" element={<ProtectedRoute><OwnerOnboarding /></ProtectedRoute>} />
-                <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPanel /></ProtectedRoute>} />
-                <Route path="/campaign" element={<ProtectedRoute><CampaignBooking /></ProtectedRoute>} />
-                <Route path="/dashboard" element={<ProtectedRoute><AdvertiserDashboard /></ProtectedRoute>} />
+                <Route path="/login" element={<LoginRoute />} />
+                <Route
+                  path="/owner-onboarding"
+                  element={
+                    <ProtectedRoute allowedRoles={['owner']}>
+                      <OwnerOnboarding />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AdminPanel />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/campaign"
+                  element={
+                    <ProtectedRoute allowedRoles={['advertiser']}>
+                      <CampaignBooking />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={['advertiser', 'admin']}>
+                      <AdvertiserDashboard />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Box>

@@ -35,6 +35,18 @@ interface FormData {
 }
 
 const BRAND = '#E8521A';
+const POST_LOGIN_REDIRECT_DELAY_MS = 1500;
+
+/** Navigate to the appropriate page based on the user's role after login. */
+function redirectAfterLogin(role: Role, navigate: ReturnType<typeof useNavigate>) {
+  setTimeout(() => {
+    if (role === 'owner') {
+      navigate('/owner-onboarding');
+    } else {
+      navigate('/dashboard');
+    }
+  }, POST_LOGIN_REDIRECT_DELAY_MS);
+}
 
 export default function Login() {
   const navigate = useNavigate();
@@ -158,6 +170,8 @@ export default function Login() {
       }
       setLoading(false);
       setStep('success');
+      // Redirect to role-appropriate page after a short delay
+      redirectAfterLogin(role, navigate);
     } catch (err) {
       setLoading(false);
       setError(err instanceof Error ? err.message : 'Failed to save profile. Please try again.');
@@ -189,6 +203,8 @@ export default function Login() {
         setFormData((prev) => ({ ...prev, name: displayName }));
         setLoading(false);
         setStep('success');
+        // Redirect to role-appropriate page after a short delay
+        redirectAfterLogin(role, navigate);
       } else {
         // No display name from Google — let user enter their name
         if (user.email) setFormData((prev) => ({ ...prev, email: user.email as string }));
