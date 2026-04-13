@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Typography, Button, Card, Chip } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Button, Card, Chip, keyframes } from '@mui/material';
 import { Link } from 'react-router-dom';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
@@ -67,8 +67,29 @@ const STATS = [
   { value: '50+', label: 'Active brand campaigns' },
 ];
 
+const floatAnimation = keyframes`
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+`;
+
+const AD_BANNERS = [
+  { text: 'YOUR BRAND · MOVING', bg: '#FF4D4D', color: '#fff' },
+  { text: 'HDFC BANK · TRUSTED', bg: '#0D47A1', color: '#fff' },
+  { text: 'SHOP LOCAL · FRESH', bg: '#1B5E20', color: '#fff' },
+  { text: 'NYKAA · BEAUTY', bg: '#6A1B9A', color: '#fff' },
+];
+
 export default function Homepage() {
   const { isAuthenticated } = useAuthContext();
+  const [adIndex, setAdIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAdIndex((prev) => (prev + 1) % AD_BANNERS.length);
+    }, 2500);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <Box sx={{ background: '#F5F2EF', minHeight: '100vh' }}>
       {/* ── Hero ──────────────────────────────────────────────── */}
@@ -97,111 +118,384 @@ export default function Homepage() {
           }}
         />
 
-        <Chip
-          label="🚀 Now in Chennai"
-          size="small"
+        {/* Two-column grid */}
+        <Box
           sx={{
-            background: `${BRAND}22`,
-            color: BRAND,
-            fontWeight: 700,
-            mb: 2,
-            fontSize: '0.8rem',
-            border: `1px solid ${BRAND}44`,
-          }}
-        />
-
-        <Typography
-          variant="h2"
-          sx={{
-            fontFamily: '"Syne", sans-serif',
-            fontWeight: 800,
-            fontSize: { xs: '2.2rem', md: '3.2rem', lg: '3.8rem' },
-            lineHeight: 1.1,
-            mb: 2,
-            maxWidth: 720,
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            alignItems: 'center',
+            gap: { xs: 4, md: 6 },
           }}
         >
-          Turn Every Auto & Taxi Into a{' '}
-          <Box component="span" sx={{ color: BRAND }}>
-            Moving Billboard
+          {/* ── Left column: text content ── */}
+          <Box>
+            <Chip
+              label="🚀 Now in Chennai"
+              size="small"
+              sx={{
+                background: `${BRAND}22`,
+                color: BRAND,
+                fontWeight: 700,
+                mb: 2,
+                fontSize: '0.8rem',
+                border: `1px solid ${BRAND}44`,
+              }}
+            />
+
+            <Typography
+              variant="h2"
+              sx={{
+                fontFamily: '"Syne", sans-serif',
+                fontWeight: 800,
+                fontSize: { xs: '2.2rem', md: '2.8rem', lg: '3.4rem' },
+                lineHeight: 1.1,
+                mb: 2,
+              }}
+            >
+              Turn Every Auto & Taxi Into a{' '}
+              <Box component="span" sx={{ color: BRAND }}>
+                Moving Billboard
+              </Box>
+            </Typography>
+
+            <Typography
+              sx={{
+                color: 'rgba(255,255,255,0.65)',
+                fontSize: { xs: '1rem', md: '1.1rem' },
+                mb: 4,
+                maxWidth: 480,
+                lineHeight: 1.7,
+              }}
+            >
+              AdRide connects advertisers with Chennai's largest fleet of autos and
+              taxis. Launch hyper-local campaigns, track every kilometre live, and
+              reach millions of daily commuters.
+            </Typography>
+
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              {isAuthenticated ? (
+                <>
+                  <Button
+                    variant="contained"
+                    component={Link}
+                    to="/dashboard"
+                    size="large"
+                    endIcon={<ArrowForwardIcon />}
+                    sx={{ fontWeight: 700, px: 3, py: 1.5 }}
+                  >
+                    Go to Dashboard
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    component={Link}
+                    to="/campaign"
+                    size="large"
+                    sx={{
+                      borderColor: 'rgba(255,255,255,0.35)',
+                      color: '#fff',
+                      '&:hover': { borderColor: '#fff', background: 'rgba(255,255,255,0.06)' },
+                      px: 3,
+                      py: 1.5,
+                    }}
+                  >
+                    New Campaign
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="contained"
+                    component={Link}
+                    to="/campaign"
+                    size="large"
+                    endIcon={<ArrowForwardIcon />}
+                    sx={{ fontWeight: 700, px: 3, py: 1.5 }}
+                  >
+                    Start a Campaign
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    component={Link}
+                    to="/login"
+                    size="large"
+                    sx={{
+                      borderColor: 'rgba(255,255,255,0.35)',
+                      color: '#fff',
+                      '&:hover': { borderColor: '#fff', background: 'rgba(255,255,255,0.06)' },
+                      px: 3,
+                      py: 1.5,
+                    }}
+                  >
+                    Register Your Vehicle
+                  </Button>
+                </>
+              )}
+            </Box>
           </Box>
-        </Typography>
 
-        <Typography
-          sx={{
-            color: 'rgba(255,255,255,0.65)',
-            fontSize: { xs: '1rem', md: '1.15rem' },
-            mb: 4,
-            maxWidth: 560,
-            lineHeight: 1.7,
-          }}
-        >
-          AdRide connects advertisers with Chennai's largest fleet of autos and
-          taxis. Launch hyper-local campaigns, track every kilometre live, and
-          reach millions of daily commuters.
-        </Typography>
+          {/* ── Right column: animated illustration ── */}
+          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+            <Box
+              sx={{
+                position: 'relative',
+                height: { xs: 300, md: 380 },
+                borderRadius: '20px',
+                background: '#FDF0EB',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Buildings */}
+              {[
+                { id: 'left-1', width: 45, height: 100, left: 24 },
+                { id: 'left-2', width: 36, height: 72, left: 78 },
+              ].map((b) => (
+                <Box
+                  key={b.id}
+                  sx={{
+                    position: 'absolute',
+                    bottom: 80,
+                    width: b.width,
+                    height: b.height,
+                    left: b.left,
+                    background: 'rgba(255,255,255,0.45)',
+                    borderRadius: '5px 5px 0 0',
+                    border: '1px solid rgba(0,0,0,0.05)',
+                  }}
+                />
+              ))}
+              {[
+                { id: 'right-1', width: 52, height: 130, right: 24 },
+                { id: 'right-2', width: 32, height: 88, right: 84 },
+              ].map((b) => (
+                <Box
+                  key={b.id}
+                  sx={{
+                    position: 'absolute',
+                    bottom: 80,
+                    width: b.width,
+                    height: b.height,
+                    right: b.right,
+                    background: 'rgba(255,255,255,0.45)',
+                    borderRadius: '5px 5px 0 0',
+                    border: '1px solid rgba(0,0,0,0.05)',
+                  }}
+                />
+              ))}
 
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          {isAuthenticated ? (
-            <>
-              <Button
-                variant="contained"
-                component={Link}
-                to="/dashboard"
-                size="large"
-                endIcon={<ArrowForwardIcon />}
-                sx={{ fontWeight: 700, px: 3, py: 1.5 }}
-              >
-                Go to Dashboard
-              </Button>
-              <Button
-                variant="outlined"
-                component={Link}
-                to="/campaign"
-                size="large"
+              {/* Auto-rickshaw wrapper */}
+              <Box
                 sx={{
-                  borderColor: 'rgba(255,255,255,0.35)',
-                  color: '#fff',
-                  '&:hover': { borderColor: '#fff', background: 'rgba(255,255,255,0.06)' },
-                  px: 3,
-                  py: 1.5,
+                  position: 'absolute',
+                  bottom: 42,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 160,
                 }}
               >
-                New Campaign
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="contained"
-                component={Link}
-                to="/campaign"
-                size="large"
-                endIcon={<ArrowForwardIcon />}
-                sx={{ fontWeight: 700, px: 3, py: 1.5 }}
-              >
-                Start a Campaign
-              </Button>
-              <Button
-                variant="outlined"
-                component={Link}
-                to="/login"
-                size="large"
+                {/* Ad banner on top */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: -48,
+                    left: 8,
+                    right: 8,
+                    height: 44,
+                    background: 'white',
+                    borderRadius: '8px',
+                    border: '2px solid rgba(0,0,0,0.08)',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: AD_BANNERS[adIndex].bg,
+                      color: AD_BANNERS[adIndex].color,
+                      fontFamily: '"Syne", sans-serif',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      letterSpacing: '0.5px',
+                      transition: 'background 0.3s',
+                    }}
+                  >
+                    {AD_BANNERS[adIndex].text}
+                  </Box>
+                </Box>
+
+                {/* Body */}
+                <Box
+                  sx={{
+                    width: 160,
+                    height: 70,
+                    background: '#F5C842',
+                    borderRadius: '14px 14px 6px 6px',
+                    position: 'relative',
+                    boxShadow: '0 4px 0 #B89800',
+                  }}
+                >
+                  {/* Driver */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      left: 14,
+                      width: 26,
+                      height: 26,
+                      borderRadius: '50%',
+                      background: '#E8521A',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                    }}
+                  >
+                    👨
+                  </Box>
+                </Box>
+
+                {/* Left wheel */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: -12,
+                    left: 14,
+                    width: 24,
+                    height: 24,
+                    background: '#1A1510',
+                    borderRadius: '50%',
+                    border: '3px solid #444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Box sx={{ width: 16, height: 16, borderRadius: '50%', background: '#888' }} />
+                </Box>
+
+                {/* Right wheel */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: -12,
+                    right: 14,
+                    width: 24,
+                    height: 24,
+                    background: '#1A1510',
+                    borderRadius: '50%',
+                    border: '3px solid #444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Box sx={{ width: 16, height: 16, borderRadius: '50%', background: '#888' }} />
+                </Box>
+              </Box>
+
+              {/* Road */}
+              <Box
                 sx={{
-                  borderColor: 'rgba(255,255,255,0.35)',
-                  color: '#fff',
-                  '&:hover': { borderColor: '#fff', background: 'rgba(255,255,255,0.06)' },
-                  px: 3,
-                  py: 1.5,
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: 80,
+                  background: '#2C2520',
+                  borderRadius: '0 0 20px 20px',
                 }}
               >
-                Register Your Vehicle
-              </Button>
-            </>
-          )}
+                {/* Dashed center line */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '10%',
+                    right: '10%',
+                    height: 3,
+                    transform: 'translateY(-50%)',
+                    background: 'repeating-linear-gradient(90deg, #F5C842 0px, #F5C842 30px, transparent 30px, transparent 55px)',
+                  }}
+                />
+              </Box>
+
+              {/* Floating info card — top-left */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 18,
+                  left: 16,
+                  background: 'white',
+                  border: '1px solid rgba(26,21,16,0.1)',
+                  borderRadius: '10px',
+                  padding: '8px 12px',
+                  fontSize: '11px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  animation: `${floatAnimation} 3s ease-in-out infinite`,
+                  animationDelay: '0s',
+                }}
+              >
+                <Typography sx={{ fontSize: '10px', color: '#999', lineHeight: 1.3 }}>Campaign live in</Typography>
+                <Typography sx={{ fontFamily: '"Syne", sans-serif', fontSize: '13px', fontWeight: 700, lineHeight: 1.3 }}>
+                  Anna Nagar
+                </Typography>
+                <Typography sx={{ fontSize: '10px', color: BRAND, lineHeight: 1.3 }}>24 vehicles · active now</Typography>
+              </Box>
+
+              {/* Floating info card — top-right */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 18,
+                  right: 16,
+                  background: 'white',
+                  border: '1px solid rgba(26,21,16,0.1)',
+                  borderRadius: '10px',
+                  padding: '8px 12px',
+                  fontSize: '11px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  animation: `${floatAnimation} 3s ease-in-out infinite`,
+                  animationDelay: '1s',
+                }}
+              >
+                <Typography sx={{ fontSize: '10px', color: '#999', lineHeight: 1.3 }}>Fleet km today</Typography>
+                <Typography sx={{ fontFamily: '"Syne", sans-serif', fontSize: '13px', fontWeight: 700, lineHeight: 1.3 }}>
+                  1,440 km
+                </Typography>
+                <Typography sx={{ fontSize: '10px', color: '#2e7d32', lineHeight: 1.3 }}>↑ 12% vs yesterday</Typography>
+              </Box>
+
+              {/* Floating info card — middle-right */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 150,
+                  right: 12,
+                  background: 'white',
+                  border: '1px solid rgba(26,21,16,0.1)',
+                  borderRadius: '10px',
+                  padding: '8px 12px',
+                  fontSize: '11px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  animation: `${floatAnimation} 3s ease-in-out infinite`,
+                  animationDelay: '0.5s',
+                }}
+              >
+                <Typography sx={{ fontSize: '10px', color: '#999', lineHeight: 1.3 }}>Areas covered</Typography>
+                <Typography sx={{ fontFamily: '"Syne", sans-serif', fontSize: '13px', fontWeight: 700, lineHeight: 1.3 }}>
+                  T. Nagar · Adyar
+                </Typography>
+                <Typography sx={{ fontSize: '10px', color: '#999', lineHeight: 1.3 }}>+ 6 more zones</Typography>
+              </Box>
+            </Box>
+          </Box>
         </Box>
 
-        {/* Stats row */}
+        {/* Stats row — full width below both columns */}
         <Box
           sx={{
             display: 'grid',
