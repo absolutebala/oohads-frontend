@@ -73,20 +73,25 @@ const floatAnimation = keyframes`
 `;
 
 const AD_BANNERS = [
-  { text: 'YOUR BRAND · MOVING', bg: '#FF4D4D', color: '#fff' },
-  { text: 'HDFC BANK · TRUSTED', bg: '#0D47A1', color: '#fff' },
-  { text: 'SHOP LOCAL · FRESH', bg: '#1B5E20', color: '#fff' },
-  { text: 'NYKAA · BEAUTY', bg: '#6A1B9A', color: '#fff' },
+  { text: '🍕 ZOMATO — ORDER YOUR FAVOURITE FOOD NOW', bg: '#FF4D4D', color: '#fff' },
+  { text: '🏦 HDFC BANK — OPEN AN ACCOUNT TODAY', bg: '#0D47A1', color: '#fff' },
+  { text: '🛍 DECATHLON — SPORTS FOR EVERYONE', bg: '#1B5E20', color: '#fff' },
+  { text: '💜 NYKAA — YOUR BEAUTY DESTINATION', bg: '#6A1B9A', color: '#fff' },
 ];
 
 export default function Homepage() {
   const { isAuthenticated } = useAuthContext();
   const [adIndex, setAdIndex] = useState(0);
+  const [adOpacity, setAdOpacity] = useState(1);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setAdIndex((prev) => (prev + 1) % AD_BANNERS.length);
-    }, 2500);
+      setAdOpacity(0);
+      setTimeout(() => {
+        setAdIndex((prev) => (prev + 1) % AD_BANNERS.length);
+        setAdOpacity(1);
+      }, 300);
+    }, 2800);
     return () => clearInterval(timer);
   }, []);
 
@@ -238,258 +243,285 @@ export default function Homepage() {
             <Box
               sx={{
                 position: 'relative',
-                height: { xs: 300, md: 380 },
-                borderRadius: '20px',
-                background: '#FDF0EB',
-                overflow: 'hidden',
+                height: { xs: 340, md: 440 },
               }}
             >
-              {/* Buildings */}
-              {[
-                { id: 'left-1', width: 45, height: 100, left: 24 },
-                { id: 'left-2', width: 36, height: 72, left: 78 },
-              ].map((b) => (
-                <Box
-                  key={b.id}
-                  sx={{
-                    position: 'absolute',
-                    bottom: 80,
-                    width: b.width,
-                    height: b.height,
-                    left: b.left,
-                    background: 'rgba(255,255,255,0.45)',
-                    borderRadius: '5px 5px 0 0',
-                    border: '1px solid rgba(0,0,0,0.05)',
-                  }}
-                />
-              ))}
-              {[
-                { id: 'right-1', width: 52, height: 130, right: 24 },
-                { id: 'right-2', width: 32, height: 88, right: 84 },
-              ].map((b) => (
-                <Box
-                  key={b.id}
-                  sx={{
-                    position: 'absolute',
-                    bottom: 80,
-                    width: b.width,
-                    height: b.height,
-                    right: b.right,
-                    background: 'rgba(255,255,255,0.45)',
-                    borderRadius: '5px 5px 0 0',
-                    border: '1px solid rgba(0,0,0,0.05)',
-                  }}
-                />
-              ))}
-
-              {/* Auto-rickshaw wrapper */}
+              {/* City background — fills the container */}
               <Box
                 sx={{
                   position: 'absolute',
-                  bottom: 42,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: 160,
+                  inset: 0,
+                  background: 'linear-gradient(160deg, #FDF0EB 0%, #F5EDE7 100%)',
+                  borderRadius: '24px',
+                  overflow: 'hidden',
                 }}
               >
-                {/* Ad banner on top */}
+                {/* Buildings */}
+                {/* Building 1 */}
                 <Box
                   sx={{
                     position: 'absolute',
-                    top: -48,
-                    left: 8,
-                    right: 8,
-                    height: 44,
-                    background: 'white',
-                    borderRadius: '8px',
-                    border: '2px solid rgba(0,0,0,0.08)',
-                    overflow: 'hidden',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+                    bottom: 90,
+                    left: 30,
+                    width: 50,
+                    height: 110,
+                    background: 'rgba(255,255,255,0.5)',
+                    borderRadius: '6px 6px 0 0',
+                    border: '1px solid rgba(0,0,0,0.06)',
                   }}
-                >
-                  <Box
-                    sx={{
-                      width: '100%',
-                      height: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: AD_BANNERS[adIndex].bg,
-                      color: AD_BANNERS[adIndex].color,
-                      fontFamily: '"Syne", sans-serif',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      letterSpacing: '0.5px',
-                      transition: 'background 0.3s',
-                    }}
-                  >
-                    {AD_BANNERS[adIndex].text}
-                  </Box>
-                </Box>
-
-                {/* Body */}
+                />
+                {/* Building 2 */}
                 <Box
                   sx={{
-                    width: 160,
-                    height: 70,
-                    background: '#F5C842',
-                    borderRadius: '14px 14px 6px 6px',
-                    position: 'relative',
-                    boxShadow: '0 4px 0 #B89800',
+                    position: 'absolute',
+                    bottom: 90,
+                    left: 90,
+                    width: 40,
+                    height: 80,
+                    background: 'rgba(255,255,255,0.5)',
+                    borderRadius: '6px 6px 0 0',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                  }}
+                />
+                {/* Building 3 */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 90,
+                    right: 30,
+                    width: 60,
+                    height: 140,
+                    background: 'rgba(255,255,255,0.5)',
+                    borderRadius: '6px 6px 0 0',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                  }}
+                />
+                {/* Building 4 */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 90,
+                    right: 100,
+                    width: 35,
+                    height: 95,
+                    background: 'rgba(255,255,255,0.5)',
+                    borderRadius: '6px 6px 0 0',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                  }}
+                />
+
+                {/* Auto-rickshaw wrapper */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 50,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 180,
                   }}
                 >
-                  {/* Driver */}
+                  {/* Ad banner on top */}
                   <Box
                     sx={{
                       position: 'absolute',
-                      top: 8,
-                      left: 14,
-                      width: 26,
-                      height: 26,
+                      top: -56,
+                      left: 8,
+                      right: 8,
+                      height: 52,
+                      background: 'white',
+                      borderRadius: '8px',
+                      border: '2px solid rgba(26,21,16,0.1)',
+                      overflow: 'hidden',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: AD_BANNERS[adIndex].bg,
+                        color: AD_BANNERS[adIndex].color,
+                        fontFamily: '"Syne", sans-serif',
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.5px',
+                        opacity: adOpacity,
+                        transition: 'opacity 0.3s',
+                        textAlign: 'center',
+                        px: 1,
+                      }}
+                    >
+                      {AD_BANNERS[adIndex].text}
+                    </Box>
+                  </Box>
+
+                  {/* Body */}
+                  <Box
+                    sx={{
+                      width: 180,
+                      height: 80,
+                      background: '#F5C842',
+                      borderRadius: '14px 14px 6px 6px',
+                      position: 'relative',
+                      boxShadow: '0 4px 0 #B89800',
+                    }}
+                  >
+                    {/* Driver */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 10,
+                        left: 16,
+                        width: 30,
+                        height: 30,
+                        borderRadius: '50%',
+                        background: '#E8521A',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.9rem',
+                      }}
+                    >
+                      👨
+                    </Box>
+                  </Box>
+
+                  {/* Left wheel */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: -14,
+                      left: 18,
+                      width: 28,
+                      height: 28,
+                      background: '#1A1510',
                       borderRadius: '50%',
-                      background: '#E8521A',
+                      border: '4px solid #444',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '14px',
                     }}
                   >
-                    👨
+                    <Box sx={{ inset: 4, position: 'absolute', background: '#888', borderRadius: '50%' }} />
+                  </Box>
+
+                  {/* Right wheel */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: -14,
+                      right: 18,
+                      width: 28,
+                      height: 28,
+                      background: '#1A1510',
+                      borderRadius: '50%',
+                      border: '4px solid #444',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Box sx={{ inset: 4, position: 'absolute', background: '#888', borderRadius: '50%' }} />
                   </Box>
                 </Box>
 
-                {/* Left wheel */}
+                {/* Road */}
                 <Box
                   sx={{
                     position: 'absolute',
-                    bottom: -12,
-                    left: 14,
-                    width: 24,
-                    height: 24,
-                    background: '#1A1510',
-                    borderRadius: '50%',
-                    border: '3px solid #444',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 90,
+                    background: '#2C2520',
+                    borderRadius: '0 0 24px 24px',
                   }}
                 >
-                  <Box sx={{ width: 16, height: 16, borderRadius: '50%', background: '#888' }} />
+                  {/* Dashed center line */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '10%',
+                      right: '10%',
+                      height: 3,
+                      transform: 'translateY(-50%)',
+                      background: 'repeating-linear-gradient(90deg, #F5C842 0px, #F5C842 30px, transparent 30px, transparent 55px)',
+                    }}
+                  />
                 </Box>
-
-                {/* Right wheel */}
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: -12,
-                    right: 14,
-                    width: 24,
-                    height: 24,
-                    background: '#1A1510',
-                    borderRadius: '50%',
-                    border: '3px solid #444',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Box sx={{ width: 16, height: 16, borderRadius: '50%', background: '#888' }} />
-                </Box>
-              </Box>
-
-              {/* Road */}
-              <Box
-                sx={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 80,
-                  background: '#2C2520',
-                  borderRadius: '0 0 20px 20px',
-                }}
-              >
-                {/* Dashed center line */}
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '10%',
-                    right: '10%',
-                    height: 3,
-                    transform: 'translateY(-50%)',
-                    background: 'repeating-linear-gradient(90deg, #F5C842 0px, #F5C842 30px, transparent 30px, transparent 55px)',
-                  }}
-                />
               </Box>
 
               {/* Floating info card — top-left */}
               <Box
                 sx={{
                   position: 'absolute',
-                  top: 18,
-                  left: 16,
+                  top: 20,
+                  left: 20,
                   background: 'white',
                   border: '1px solid rgba(26,21,16,0.1)',
-                  borderRadius: '10px',
-                  padding: '8px 12px',
-                  fontSize: '11px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  borderRadius: '12px',
+                  padding: '0.65rem 0.9rem',
+                  fontSize: '0.75rem',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
                   animation: `${floatAnimation} 3s ease-in-out infinite`,
                   animationDelay: '0s',
                 }}
               >
-                <Typography sx={{ fontSize: '10px', color: '#999', lineHeight: 1.3 }}>Campaign live in</Typography>
-                <Typography sx={{ fontFamily: '"Syne", sans-serif', fontSize: '13px', fontWeight: 700, lineHeight: 1.3 }}>
+                <Typography sx={{ fontSize: '0.68rem', color: '#6B5E54', lineHeight: 1.3 }}>Campaign live in</Typography>
+                <Typography sx={{ fontFamily: '"Syne"', fontWeight: 700, fontSize: '0.9rem', color: '#1A1510', lineHeight: 1.3 }}>
                   Anna Nagar
                 </Typography>
-                <Typography sx={{ fontSize: '10px', color: BRAND, lineHeight: 1.3 }}>24 vehicles · active now</Typography>
+                <Typography sx={{ fontSize: '0.68rem', color: BRAND, lineHeight: 1.3 }}>24 vehicles · active now</Typography>
               </Box>
 
               {/* Floating info card — top-right */}
               <Box
                 sx={{
                   position: 'absolute',
-                  top: 18,
-                  right: 16,
+                  top: 20,
+                  right: 20,
                   background: 'white',
                   border: '1px solid rgba(26,21,16,0.1)',
-                  borderRadius: '10px',
-                  padding: '8px 12px',
-                  fontSize: '11px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  borderRadius: '12px',
+                  padding: '0.65rem 0.9rem',
+                  fontSize: '0.75rem',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
                   animation: `${floatAnimation} 3s ease-in-out infinite`,
                   animationDelay: '1s',
                 }}
               >
-                <Typography sx={{ fontSize: '10px', color: '#999', lineHeight: 1.3 }}>Fleet km today</Typography>
-                <Typography sx={{ fontFamily: '"Syne", sans-serif', fontSize: '13px', fontWeight: 700, lineHeight: 1.3 }}>
-                  1,440 km
+                <Typography sx={{ fontSize: '0.68rem', color: '#6B5E54', lineHeight: 1.3 }}>Impressions today</Typography>
+                <Typography sx={{ fontFamily: '"Syne"', fontWeight: 700, fontSize: '0.9rem', color: '#1A1510', lineHeight: 1.3 }}>
+                  18,240
                 </Typography>
-                <Typography sx={{ fontSize: '10px', color: '#2e7d32', lineHeight: 1.3 }}>↑ 12% vs yesterday</Typography>
+                <Typography sx={{ fontSize: '0.68rem', color: '#2e7d32', lineHeight: 1.3 }}>↑ 12% vs yesterday</Typography>
               </Box>
 
               {/* Floating info card — middle-right */}
               <Box
                 sx={{
                   position: 'absolute',
-                  top: 150,
-                  right: 12,
+                  top: 165,
+                  right: 15,
                   background: 'white',
                   border: '1px solid rgba(26,21,16,0.1)',
-                  borderRadius: '10px',
-                  padding: '8px 12px',
-                  fontSize: '11px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  borderRadius: '12px',
+                  padding: '0.65rem 0.9rem',
+                  fontSize: '0.75rem',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
                   animation: `${floatAnimation} 3s ease-in-out infinite`,
                   animationDelay: '0.5s',
                 }}
               >
-                <Typography sx={{ fontSize: '10px', color: '#999', lineHeight: 1.3 }}>Areas covered</Typography>
-                <Typography sx={{ fontFamily: '"Syne", sans-serif', fontSize: '13px', fontWeight: 700, lineHeight: 1.3 }}>
+                <Typography sx={{ fontSize: '0.68rem', color: '#6B5E54', lineHeight: 1.3 }}>Areas covered</Typography>
+                <Typography sx={{ fontFamily: '"Syne"', fontWeight: 700, fontSize: '0.9rem', color: '#1A1510', lineHeight: 1.3 }}>
                   T. Nagar · Adyar
                 </Typography>
-                <Typography sx={{ fontSize: '10px', color: '#999', lineHeight: 1.3 }}>+ 6 more zones</Typography>
+                <Typography sx={{ fontSize: '0.68rem', color: '#6B5E54', lineHeight: 1.3 }}>+ 6 more zones</Typography>
               </Box>
             </Box>
           </Box>
