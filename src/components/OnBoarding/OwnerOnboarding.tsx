@@ -194,8 +194,9 @@ export default function OwnerOnboarding() {
     }
 
     try {
-      const userId = firebaseUser?.uid ?? `owner_${Date.now()}`;
-      const ownerId = `owner_${userId}`;
+      // Use the Firebase Auth UID directly so Storage paths match security rules:
+      // rules: match /owners/{ownerId} where ownerId == request.auth.uid
+      const ownerId = firebaseUser?.uid ?? `owner_${Date.now()}`;
       setUploadProgress(0);
 
       let vehiclePhotoUrl = '';
@@ -217,7 +218,7 @@ export default function OwnerOnboarding() {
 
       await createOwnerProfile({
         id: ownerId,
-        userId,
+        userId: ownerId,
         name: personal.name,
         phone: personal.phone,
         vehicleType: vehicle.type as 'auto' | 'taxi',

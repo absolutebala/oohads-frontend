@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Button, Card, Divider, Chip } from '@mui/material';
+import { Box, Typography, Button, Card, Chip } from '@mui/material';
 import { Link } from 'react-router-dom';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
@@ -387,8 +387,6 @@ export default function Homepage() {
               Book a Campaign
             </Button>
           </Box>
-
-          <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' } }} />
 
           {/* For Vehicle Owners */}
           <Box>
