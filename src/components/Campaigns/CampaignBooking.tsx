@@ -302,7 +302,7 @@ export default function CampaignBooking() {
                             src={vehicle.vehiclePhotoUrl}
                             alt="Vehicle"
                             loading="lazy"
-                            onClick={(e: React.MouseEvent) => { e.stopPropagation(); setPhotoModal(vehicle.vehiclePhotoUrl!); }}
+                            onClick={(e: React.MouseEvent) => { e.stopPropagation(); setPhotoModal(vehicle.vehiclePhotoUrl || null); }}
                             sx={{
                               width: 70,
                               height: 70,

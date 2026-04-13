@@ -35,6 +35,7 @@ import { Campaign as FirestoreCampaign } from '../../services/firebase/firestore
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler);
 
 const BRAND = '#E8521A';
+const MOCK_TOTAL_KM_THIS_WEEK = 3123;
 
 // Local dashboard campaign type (used for display)
 interface DashboardCampaign {
@@ -182,7 +183,7 @@ export default function AdvertiserDashboard() {
   const liveCampaigns = campaigns.filter((c) => c.status === 'live').length;
   const totalVehicles = campaigns.reduce((s, c) => s + c.vehicles, 0);
   const totalKmCovered = campaigns.reduce((s, c) => s + c.kmCovered, 0);
-  const totalKmThisWeek = firebaseReady ? totalKmCovered : 3123;
+  const totalKmThisWeek = firebaseReady ? totalKmCovered : MOCK_TOTAL_KM_THIS_WEEK;
 
   return (
     <Box sx={{ minHeight: 'calc(100vh - 64px)', background: '#F5F2EF', p: { xs: 2, md: 4 } }}>

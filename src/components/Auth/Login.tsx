@@ -140,7 +140,7 @@ export default function Login() {
         if (existing.role !== 'owner') {
           await firebaseLogout();
           setLoading(false);
-          setError('This account is registered as an Advertiser. Please use the Advertiser tab and Google sign-in to log in.');
+          setError('This account is registered as an Advertiser. Please use the Advertiser tab and Google sign-in to log in instead.');
           return;
         }
         // Existing owner — log in directly
@@ -166,6 +166,10 @@ export default function Login() {
       setError('Please enter your name');
       return;
     }
+    if (!tabRole) {
+      setError('Please select an account type (Owner or Advertiser) first.');
+      return;
+    }
     setLoading(true);
     setError('');
 
@@ -176,7 +180,7 @@ export default function Login() {
 
     try {
       const user = verifiedUser;
-      const role = tabRole ?? 'advertiser';
+      const role = tabRole;
       if (user) {
         await createOrUpdateUserProfile(user, formData.name, role, formData.email || undefined);
         await refreshUserProfile();
@@ -209,7 +213,7 @@ export default function Login() {
         if (existing.role !== 'advertiser') {
           await firebaseLogout();
           setLoading(false);
-          setError('This account is registered as a Vehicle Owner. Please use the Owner tab and Phone OTP to log in.');
+          setError('This account is registered as a Vehicle Owner. Please use the Owner tab and Phone OTP to log in instead.');
           return;
         }
         // Existing advertiser — log in directly
