@@ -255,9 +255,6 @@ export default function Login() {
         minHeight: 'calc(100vh - 64px)',
       }}
     >
-      {/* reCAPTCHA container (invisible, required for phone auth) */}
-      <div id="recaptcha-container" />
-
       {/* Left branding panel */}
       <Box
         sx={{
@@ -598,6 +595,8 @@ export default function Login() {
             </Box>
           )}
         </Card>
+        {/* reCAPTCHA container (invisible, required for phone auth) */}
+        <div id="recaptcha-container" />
       </Box>
     </Box>
   );
