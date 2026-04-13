@@ -111,6 +111,17 @@ const MOCK_EARNINGS = [
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+function verificationStatusLabel(status: OwnerProfile['verificationStatus']): string {
+  if (status === 'verified') return 'Verified';
+  if (status === 'rejected') return 'Rejected';
+  return 'Pending';
+}
+
+function verificationStatusSub(status: OwnerProfile['verificationStatus']): string {
+  if (status === 'verified') return 'Your vehicle is approved';
+  return 'Awaiting admin review';
+}
+
 const approvalStatusConfig: Record<string, { bg: string; color: string; label: string }> = {
   pending: { bg: '#FAEEDA', color: '#633806', label: '🟡 Pending' },
   approved: { bg: '#EAF3DE', color: '#27500A', label: '🟢 Approved' },
@@ -323,8 +334,8 @@ export default function OwnerDashboard() {
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 3 }}>
                   <MetricCard
                     label="Verification Status"
-                    value={currentOwner.verificationStatus === 'verified' ? 'Verified' : currentOwner.verificationStatus === 'pending' ? 'Pending' : 'Rejected'}
-                    sub={currentOwner.verificationStatus === 'verified' ? 'Your vehicle is approved' : 'Awaiting admin review'}
+                    value={verificationStatusLabel(currentOwner.verificationStatus)}
+                    sub={verificationStatusSub(currentOwner.verificationStatus)}
                     icon={<VerifiedIcon fontSize="small" />}
                   />
                   <MetricCard
