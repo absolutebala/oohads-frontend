@@ -61,14 +61,15 @@ export default function Login() {
   const [verifiedUser, setVerifiedUser] = useState<User | null>(null);
   const [error, setError] = useState('');
 
-  // Auto-select tab based on ?role= query param
+  // Auto-select tab based on ?role= query param (only on initial mount)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const roleParam = params.get('role');
-    if (roleParam === 'owner' || roleParam === 'advertiser') {
+    if ((roleParam === 'owner' || roleParam === 'advertiser') && tabRole === null) {
       setTabRole(roleParam);
     }
-  }, [location.search]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleTabChange = (_: React.SyntheticEvent, newRole: TabRole) => {
     setTabRole(newRole);
