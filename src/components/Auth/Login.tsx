@@ -606,6 +606,18 @@ export default function Login() {
             </Box>
           )}
         </Card>
+        {/* Admin login link */}
+        <Typography
+          sx={{ mt: 2, fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center' }}
+        >
+          Admin?{' '}
+          <Link
+            to="/admin-login"
+            style={{ color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}
+          >
+            Admin Login →
+          </Link>
+        </Typography>
         {/* reCAPTCHA container (invisible, required for phone auth) */}
         <div id="recaptcha-container" />
       </Box>
