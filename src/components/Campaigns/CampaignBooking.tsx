@@ -21,6 +21,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import VerifiedIcon from '@mui/icons-material/Verified';
+import CloseIcon from '@mui/icons-material/Close';
 import { Vehicle } from '../../types';
 import { firebaseReady } from '../../config/firebase';
 import { getOwnersByStatus, createCampaign } from '../../services/firebase/firestore';
@@ -30,12 +31,12 @@ import { useAuthContext } from '../../context/AuthContext';
 const BRAND = '#E8521A';
 
 const MOCK_VEHICLES: Vehicle[] = [
-  { id: 'v1', registrationNumber: 'TN01AB1234', type: 'auto', area: 'T. Nagar', ownerName: 'Rajan Kumar', monthlyRate: 2800, kmPerDay: 80, status: 'available' },
-  { id: 'v2', registrationNumber: 'TN01CD5678', type: 'taxi', area: 'Velachery', ownerName: 'Priya Selvam', monthlyRate: 3200, kmPerDay: 120, status: 'available' },
-  { id: 'v3', registrationNumber: 'TN01EF9012', type: 'auto', area: 'Anna Nagar', ownerName: 'Murugan P', monthlyRate: 2500, kmPerDay: 75, status: 'available' },
-  { id: 'v4', registrationNumber: 'TN01GH3456', type: 'taxi', area: 'Adyar', ownerName: 'Sundar Raj', monthlyRate: 3500, kmPerDay: 140, status: 'available' },
-  { id: 'v5', registrationNumber: 'TN01IJ7890', type: 'auto', area: 'T. Nagar', ownerName: 'Kavitha M', monthlyRate: 2600, kmPerDay: 70, status: 'available' },
-  { id: 'v6', registrationNumber: 'TN01KL2345', type: 'taxi', area: 'Porur', ownerName: 'Babu S', monthlyRate: 3000, kmPerDay: 110, status: 'available' },
+  { id: 'v1', registrationNumber: 'TN01AB1234', type: 'auto', area: 'T. Nagar', ownerName: 'Rajan Kumar', monthlyRate: 2800, kmPerDay: 80, status: 'available', vehiclePhotoUrl: '' },
+  { id: 'v2', registrationNumber: 'TN01CD5678', type: 'taxi', area: 'Velachery', ownerName: 'Priya Selvam', monthlyRate: 3200, kmPerDay: 120, status: 'available', vehiclePhotoUrl: '' },
+  { id: 'v3', registrationNumber: 'TN01EF9012', type: 'auto', area: 'Anna Nagar', ownerName: 'Murugan P', monthlyRate: 2500, kmPerDay: 75, status: 'available', vehiclePhotoUrl: '' },
+  { id: 'v4', registrationNumber: 'TN01GH3456', type: 'taxi', area: 'Adyar', ownerName: 'Sundar Raj', monthlyRate: 3500, kmPerDay: 140, status: 'available', vehiclePhotoUrl: '' },
+  { id: 'v5', registrationNumber: 'TN01IJ7890', type: 'auto', area: 'T. Nagar', ownerName: 'Kavitha M', monthlyRate: 2600, kmPerDay: 70, status: 'available', vehiclePhotoUrl: '' },
+  { id: 'v6', registrationNumber: 'TN01KL2345', type: 'taxi', area: 'Porur', ownerName: 'Babu S', monthlyRate: 3000, kmPerDay: 110, status: 'available', vehiclePhotoUrl: '' },
 ];
 const AREAS = ['All Areas', 'T. Nagar', 'Velachery', 'Anna Nagar', 'Adyar', 'Porur', 'Mylapore'];
 const OBJECTIVES = ['Brand Awareness', 'Product Launch', 'Event Promotion', 'App Install', 'Store Traffic'];
@@ -109,6 +110,7 @@ export default function CampaignBooking() {
   const artworkInputRef = useRef<HTMLInputElement>(null);
   const [allVehicles, setAllVehicles] = useState<Vehicle[]>(MOCK_VEHICLES);
   const [vehiclesLoading, setVehiclesLoading] = useState(false);
+  const [photoModal, setPhotoModal] = useState<string | null>(null);
   const [campaignDetails, setCampaignDetails] = useState<CampaignDetails>({
     campaignName: '',
     startDate: '',
@@ -133,6 +135,7 @@ export default function CampaignBooking() {
             monthlyRate: o.monthlyRate,
             kmPerDay: 80, // default
             status: 'available' as const,
+            vehiclePhotoUrl: o.vehiclePhotoUrl || '',
           }));
           setAllVehicles(vehicles);
         }
@@ -292,9 +295,41 @@ export default function CampaignBooking() {
                         }}
                       >
                         <Checkbox checked={isSelected} sx={{ color: BRAND, '&.Mui-checked': { color: BRAND }, p: 0 }} />
-                        <Box sx={{ color: BRAND, flexShrink: 0 }}>
-                          <DirectionsCarIcon />
-                        </Box>
+                        {/* Vehicle photo thumbnail */}
+                        {vehicle.vehiclePhotoUrl ? (
+                          <Box
+                            component="img"
+                            src={vehicle.vehiclePhotoUrl}
+                            alt="Vehicle"
+                            loading="lazy"
+                            onClick={(e: React.MouseEvent) => { e.stopPropagation(); setPhotoModal(vehicle.vehiclePhotoUrl || null); }}
+                            sx={{
+                              width: 70,
+                              height: 70,
+                              objectFit: 'cover',
+                              borderRadius: 1,
+                              cursor: 'zoom-in',
+                              flexShrink: 0,
+                              border: '1px solid rgba(26,21,16,0.1)',
+                            }}
+                          />
+                        ) : (
+                          <Box
+                            sx={{
+                              width: 70,
+                              height: 70,
+                              background: '#F5F2EF',
+                              borderRadius: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                              border: '1px solid rgba(26,21,16,0.08)',
+                            }}
+                          >
+                            <DirectionsCarIcon sx={{ color: '#C0B4A8', fontSize: 32 }} />
+                          </Box>
+                        )}
                         <Box sx={{ flex: 1 }}>
                           <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>{vehicle.registrationNumber}</Typography>
                           <Typography sx={{ fontSize: '0.75rem', color: '#6B5E54' }}>
@@ -586,6 +621,60 @@ export default function CampaignBooking() {
           )}
         </Box>
       </Box>
+
+      {/* Vehicle photo modal */}
+      {photoModal && (
+        <Box
+          onClick={() => setPhotoModal(null)}
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.82)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            p: 2,
+          }}
+        >
+          <Box
+            sx={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Button
+              onClick={() => setPhotoModal(null)}
+              sx={{
+                position: 'absolute',
+                top: -18,
+                right: -18,
+                minWidth: 36,
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                background: '#fff',
+                color: '#1A1510',
+                zIndex: 1,
+                p: 0,
+                '&:hover': { background: '#f0f0f0' },
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </Button>
+            <Box
+              component="img"
+              src={photoModal}
+              alt="Vehicle photo"
+              sx={{
+                maxWidth: '100%',
+                maxHeight: '85vh',
+                borderRadius: 2,
+                display: 'block',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              }}
+            />
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }

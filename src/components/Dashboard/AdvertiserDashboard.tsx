@@ -35,6 +35,7 @@ import { Campaign as FirestoreCampaign } from '../../services/firebase/firestore
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler);
 
 const BRAND = '#E8521A';
+const MOCK_TOTAL_KM_THIS_WEEK = 3123;
 
 // Local dashboard campaign type (used for display)
 interface DashboardCampaign {
@@ -77,11 +78,11 @@ const MOCK_CAMPAIGNS: DashboardCampaign[] = [
 ];
 
 const MOCK_VEHICLES_KM = [
-  { id: 'v1', reg: 'TN01AB1234', type: 'auto', area: 'T. Nagar', kmToday: 82, kmTotal: 2460, target: 100 },
-  { id: 'v2', reg: 'TN01CD5678', type: 'taxi', area: 'Velachery', kmToday: 118, kmTotal: 3540, target: 120 },
-  { id: 'v3', reg: 'TN01EF9012', type: 'auto', area: 'Anna Nagar', kmToday: 74, kmTotal: 2220, target: 80 },
-  { id: 'v4', reg: 'TN01GH3456', type: 'taxi', area: 'Adyar', kmToday: 136, kmTotal: 4080, target: 140 },
-  { id: 'v5', reg: 'TN01IJ7890', type: 'auto', area: 'T. Nagar', kmToday: 68, kmTotal: 2040, target: 75 },
+  { id: 'v1', reg: 'TN01AB1234', type: 'auto', area: 'T. Nagar', kmToday: 82, kmTotal: 2460 },
+  { id: 'v2', reg: 'TN01CD5678', type: 'taxi', area: 'Velachery', kmToday: 118, kmTotal: 3540 },
+  { id: 'v3', reg: 'TN01EF9012', type: 'auto', area: 'Anna Nagar', kmToday: 74, kmTotal: 2220 },
+  { id: 'v4', reg: 'TN01GH3456', type: 'taxi', area: 'Adyar', kmToday: 136, kmTotal: 4080 },
+  { id: 'v5', reg: 'TN01IJ7890', type: 'auto', area: 'T. Nagar', kmToday: 68, kmTotal: 2040 },
 ];
 
 const statusConfig: Record<string, { bg: string; color: string; label: string }> = {
@@ -115,12 +116,6 @@ const perVehicleBarData = {
       label: 'Km Today',
       data: MOCK_VEHICLES_KM.map((v) => v.kmToday),
       backgroundColor: BRAND,
-      borderRadius: 6,
-    },
-    {
-      label: 'Daily Target',
-      data: MOCK_VEHICLES_KM.map((v) => v.target),
-      backgroundColor: 'rgba(26,21,16,0.08)',
       borderRadius: 6,
     },
   ],
@@ -185,10 +180,10 @@ export default function AdvertiserDashboard() {
     return unsubscribe;
   }, [firebaseUser?.uid]);
 
-  const totalKmThisWeek = 3123;
   const liveCampaigns = campaigns.filter((c) => c.status === 'live').length;
   const totalVehicles = campaigns.reduce((s, c) => s + c.vehicles, 0);
   const totalKmCovered = campaigns.reduce((s, c) => s + c.kmCovered, 0);
+  const totalKmThisWeek = firebaseReady ? totalKmCovered : MOCK_TOTAL_KM_THIS_WEEK;
 
   return (
     <Box sx={{ minHeight: 'calc(100vh - 64px)', background: '#F5F2EF', p: { xs: 2, md: 4 } }}>
@@ -251,8 +246,9 @@ export default function AdvertiserDashboard() {
               />
               <MetricCard
                 label="Km This Week"
-                value={`${(totalKmThisWeek / 1000).toFixed(1)}K`}
-                change="12% above target"
+                value={totalKmThisWeek > 0 ? `${(totalKmThisWeek / 1000).toFixed(1)}K` : '0'}
+                change={totalKmThisWeek > 0 ? 'Active campaigns' : 'No active campaigns'}
+                positive={totalKmThisWeek > 0}
                 icon={<SpeedIcon fontSize="small" />}
               />
               <MetricCard
@@ -382,55 +378,24 @@ export default function AdvertiserDashboard() {
             </Card>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              {MOCK_VEHICLES_KM.map((v) => {
-                const pct = Math.round((v.kmToday / v.target) * 100);
-                return (
-                  <Card key={v.id} sx={{ p: 2.5, border: '1px solid rgba(26,21,16,0.08)' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
-                      <Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem' }}>
-                            {v.type === 'auto' ? '🛺' : '🚕'} {v.reg}
-                          </Typography>
-                          <Chip
-                            label={pct >= 100 ? '✅ On Target' : pct >= 80 ? '🔶 Near Target' : '🔴 Below Target'}
-                            size="small"
-                            sx={{
-                              background: pct >= 100 ? '#EAF3DE' : pct >= 80 ? '#FAEEDA' : '#FDF0EB',
-                              color: pct >= 100 ? '#27500A' : pct >= 80 ? '#633806' : '#B83D0F',
-                              fontWeight: 600,
-                              fontSize: '0.65rem',
-                            }}
-                          />
-                        </Box>
-                        <Typography sx={{ fontSize: '0.75rem', color: '#6B5E54' }}>
-                          {v.area} · Total: {v.kmTotal.toLocaleString()} km
-                        </Typography>
-                      </Box>
-                      <Box sx={{ textAlign: 'right' }}>
-                        <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: BRAND }}>{v.kmToday} km</Typography>
-                        <Typography sx={{ fontSize: '0.7rem', color: '#6B5E54' }}>today / {v.target} target</Typography>
-                      </Box>
+              {MOCK_VEHICLES_KM.map((v) => (
+                <Card key={v.id} sx={{ p: 2.5, border: '1px solid rgba(26,21,16,0.08)' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                    <Box>
+                      <Typography sx={{ fontWeight: 700, fontSize: '0.9rem' }}>
+                        {v.type === 'auto' ? '🛺' : '🚕'} {v.reg}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.75rem', color: '#6B5E54' }}>
+                        {v.area} · Total: {v.kmTotal.toLocaleString()} km
+                      </Typography>
                     </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={Math.min(pct, 100)}
-                      sx={{
-                        height: 6,
-                        borderRadius: 3,
-                        backgroundColor: 'rgba(26,21,16,0.08)',
-                        '& .MuiLinearProgress-bar': {
-                          backgroundColor: pct >= 100 ? '#27500A' : pct >= 80 ? '#E8521A' : '#B83D0F',
-                          borderRadius: 3,
-                        },
-                      }}
-                    />
-                    <Typography sx={{ fontSize: '0.7rem', color: '#6B5E54', mt: 0.5 }}>
-                      {pct}% of daily target
-                    </Typography>
-                  </Card>
-                );
-              })}
+                    <Box sx={{ textAlign: 'right' }}>
+                      <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: BRAND }}>{v.kmToday} km</Typography>
+                      <Typography sx={{ fontSize: '0.7rem', color: '#6B5E54' }}>today</Typography>
+                    </Box>
+                  </Box>
+                </Card>
+              ))}
             </Box>
           </Box>
         )}

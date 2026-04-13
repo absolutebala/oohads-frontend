@@ -62,6 +62,7 @@ export interface Vehicle {
   monthlyRate: number;
   kmPerDay: number;
   status: 'available' | 'booked' | 'inactive';
+  vehiclePhotoUrl?: string;
 }
 
 export interface Campaign {
