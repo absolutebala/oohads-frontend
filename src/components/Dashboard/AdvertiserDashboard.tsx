@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -8,6 +8,7 @@ import {
   Tab,
   Tabs,
   LinearProgress,
+  CircularProgress,
 } from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
@@ -26,12 +27,50 @@ import {
   Filler,
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
+import { firebaseReady } from '../../config/firebase';
+import { listenToAdvertiserCampaigns } from '../../services/firebase/realtime';
+import { useAuthContext } from '../../context/AuthContext';
+import { Campaign as FirestoreCampaign } from '../../services/firebase/firestore';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler);
 
 const BRAND = '#E8521A';
 
-const MOCK_CAMPAIGNS = [
+// Local dashboard campaign type (used for display)
+interface DashboardCampaign {
+  id: string;
+  name: string;
+  status: 'live' | 'approved' | 'completed' | 'submitted';
+  vehicles: number;
+  startDate: string;
+  endDate: string;
+  kmCovered: number;
+  budget: number;
+  objective: string;
+}
+
+function firestoreToDashboardCampaign(c: FirestoreCampaign): DashboardCampaign {
+  const statusMap: Record<string, DashboardCampaign['status']> = {
+    active: 'live',
+    draft: 'submitted',
+    pending_payment: 'approved',
+    completed: 'completed',
+    cancelled: 'completed',
+  };
+  return {
+    id: c.id,
+    name: c.campaignName,
+    status: statusMap[c.status] ?? 'submitted',
+    vehicles: c.selectedVehicleIds.length,
+    startDate: c.startDate,
+    endDate: c.endDate,
+    kmCovered: 0,
+    budget: c.totalCost,
+    objective: c.objective,
+  };
+}
+
+const MOCK_CAMPAIGNS: DashboardCampaign[] = [
   { id: 'c1', name: 'Diwali Sale 2024', status: 'live' as const, vehicles: 5, startDate: '2024-01-01', endDate: '2024-01-31', kmCovered: 12450, budget: 16000, objective: 'Brand Awareness' },
   { id: 'c2', name: 'App Launch Chennai', status: 'approved' as const, vehicles: 3, startDate: '2024-01-15', endDate: '2024-02-14', kmCovered: 4200, budget: 9600, objective: 'App Install' },
   { id: 'c3', name: 'Store Opening Drive', status: 'completed' as const, vehicles: 8, startDate: '2023-12-01', endDate: '2023-12-31', kmCovered: 28800, budget: 24000, objective: 'Store Traffic' },
@@ -122,12 +161,34 @@ function MetricCard({ label, value, change, positive = true, icon }: MetricCardP
 }
 
 export default function AdvertiserDashboard() {
+  const { firebaseUser } = useAuthContext();
   const [tab, setTab] = useState(0);
+  const [campaigns, setCampaigns] = useState<DashboardCampaign[]>(MOCK_CAMPAIGNS);
+  const [dataLoading, setDataLoading] = useState(false);
+
+  // Subscribe to real-time campaign updates from Firestore
+  useEffect(() => {
+    if (!firebaseReady || !firebaseUser?.uid) return;
+    setDataLoading(true);
+    const unsubscribe = listenToAdvertiserCampaigns(
+      firebaseUser.uid,
+      (firestoreCampaigns) => {
+        // Always update from Firestore; use empty array when no campaigns yet
+        setCampaigns(firestoreCampaigns.map(firestoreToDashboardCampaign));
+        setDataLoading(false);
+      },
+      () => {
+        // Fall back to mock data on error
+        setDataLoading(false);
+      }
+    );
+    return unsubscribe;
+  }, [firebaseUser?.uid]);
 
   const totalKmThisWeek = 3123;
-  const liveCampaigns = MOCK_CAMPAIGNS.filter((c) => c.status === 'live').length;
-  const totalVehicles = MOCK_VEHICLES_KM.length;
-  const totalKmCovered = MOCK_CAMPAIGNS.reduce((s, c) => s + c.kmCovered, 0);
+  const liveCampaigns = campaigns.filter((c) => c.status === 'live').length;
+  const totalVehicles = campaigns.reduce((s, c) => s + c.vehicles, 0);
+  const totalKmCovered = campaigns.reduce((s, c) => s + c.kmCovered, 0);
 
   return (
     <Box sx={{ minHeight: 'calc(100vh - 64px)', background: '#F5F2EF', p: { xs: 2, md: 4 } }}>
@@ -168,6 +229,12 @@ export default function AdvertiserDashboard() {
         {/* Tab: Overview */}
         {tab === 0 && (
           <Box>
+            {dataLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress sx={{ color: BRAND }} />
+              </Box>
+            ) : (
+            <>
             {/* Metrics */}
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 3 }}>
               <MetricCard
@@ -208,7 +275,7 @@ export default function AdvertiserDashboard() {
             {/* Campaign Timeline */}
             <Card sx={{ p: 3, border: '1px solid rgba(26,21,16,0.08)' }}>
               <Typography sx={{ fontWeight: 700, mb: 2 }}>Campaign Timeline</Typography>
-              {MOCK_CAMPAIGNS.map((campaign) => {
+              {campaigns.map((campaign) => {
                 const start = new Date(campaign.startDate);
                 const end = new Date(campaign.endDate);
                 const today = new Date();
@@ -258,6 +325,8 @@ export default function AdvertiserDashboard() {
                 );
               })}
             </Card>
+            </>
+            )}
           </Box>
         )}
 
@@ -265,7 +334,7 @@ export default function AdvertiserDashboard() {
         {tab === 1 && (
           <Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {MOCK_CAMPAIGNS.map((campaign) => (
+              {campaigns.map((campaign) => (
                 <Card key={campaign.id} sx={{ p: 3, border: '1px solid rgba(26,21,16,0.08)' }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
                     <Box>

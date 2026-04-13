@@ -9,6 +9,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { useAuthContext } from '../../context/AuthContext';
 
 const BRAND = '#E8521A';
 
@@ -67,6 +68,7 @@ const STATS = [
 ];
 
 export default function Homepage() {
+  const { isAuthenticated } = useAuthContext();
   return (
     <Box sx={{ background: '#F5F2EF', minHeight: '100vh' }}>
       {/* ── Hero ──────────────────────────────────────────────── */}
@@ -140,31 +142,63 @@ export default function Homepage() {
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          <Button
-            variant="contained"
-            component={Link}
-            to="/campaign"
-            size="large"
-            endIcon={<ArrowForwardIcon />}
-            sx={{ fontWeight: 700, px: 3, py: 1.5 }}
-          >
-            Start a Campaign
-          </Button>
-          <Button
-            variant="outlined"
-            component={Link}
-            to="/login"
-            size="large"
-            sx={{
-              borderColor: 'rgba(255,255,255,0.35)',
-              color: '#fff',
-              '&:hover': { borderColor: '#fff', background: 'rgba(255,255,255,0.06)' },
-              px: 3,
-              py: 1.5,
-            }}
-          >
-            Register Your Vehicle
-          </Button>
+          {isAuthenticated ? (
+            <>
+              <Button
+                variant="contained"
+                component={Link}
+                to="/dashboard"
+                size="large"
+                endIcon={<ArrowForwardIcon />}
+                sx={{ fontWeight: 700, px: 3, py: 1.5 }}
+              >
+                Go to Dashboard
+              </Button>
+              <Button
+                variant="outlined"
+                component={Link}
+                to="/campaign"
+                size="large"
+                sx={{
+                  borderColor: 'rgba(255,255,255,0.35)',
+                  color: '#fff',
+                  '&:hover': { borderColor: '#fff', background: 'rgba(255,255,255,0.06)' },
+                  px: 3,
+                  py: 1.5,
+                }}
+              >
+                New Campaign
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="contained"
+                component={Link}
+                to="/campaign"
+                size="large"
+                endIcon={<ArrowForwardIcon />}
+                sx={{ fontWeight: 700, px: 3, py: 1.5 }}
+              >
+                Start a Campaign
+              </Button>
+              <Button
+                variant="outlined"
+                component={Link}
+                to="/login"
+                size="large"
+                sx={{
+                  borderColor: 'rgba(255,255,255,0.35)',
+                  color: '#fff',
+                  '&:hover': { borderColor: '#fff', background: 'rgba(255,255,255,0.06)' },
+                  px: 3,
+                  py: 1.5,
+                }}
+              >
+                Register Your Vehicle
+              </Button>
+            </>
+          )}
         </Box>
 
         {/* Stats row */}

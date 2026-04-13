@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -45,6 +45,16 @@ import BlockIcon from '@mui/icons-material/Block';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import SpeedIcon from '@mui/icons-material/Speed';
+import { firebaseReady } from '../../config/firebase';
+import {
+  getAllOwners,
+  getAllCampaigns,
+  createOwnerProfile,
+  updateOwnerProfile,
+  updateCampaign,
+  OwnerProfile,
+  Campaign as FirestoreCampaign,
+} from '../../services/firebase/firestore';
 
 ChartJS.register(
   CategoryScale, LinearScale, BarElement, LineElement, PointElement,
@@ -101,6 +111,61 @@ const MOCK_CAMPAIGNS: CampaignEntry[] = [
   { id: 'c4', name: 'New Year Offer',      advertiser: 'Café Coffee Day',     status: 'reviewing', vehicles: 2, budget:  6000, startDate: '2024-01-25', endDate: '2024-02-25', kmCovered:     0, objective: 'Footfall' },
   { id: 'c5', name: 'Product Awareness',   advertiser: 'Asian Paints',        status: 'submitted', vehicles: 0, budget: 12000, startDate: '2024-02-01', endDate: '2024-03-01', kmCovered:     0, objective: 'Brand Awareness' },
 ];
+
+// ─── Firestore ↔ Admin-entry converters ──────────────────────────────────────
+
+function ownerProfileToEntry(o: OwnerProfile): OwnerEntry {
+  const statusMap: Record<string, OwnerEntry['status']> = {
+    verified: 'active',
+    pending: 'pending',
+    rejected: 'inactive',
+  };
+  return {
+    id: o.id,
+    name: o.name,
+    phone: o.phone,
+    vehicleType: o.vehicleType,
+    registrationNumber: o.registrationNumber,
+    area: o.operatingAreas[0] ?? '',
+    monthlyRate: o.monthlyRate,
+    status: statusMap[o.verificationStatus] ?? 'pending',
+    addedAt: o.createdAt ? o.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
+  };
+}
+
+function firestoreToCampaignEntry(c: FirestoreCampaign): CampaignEntry {
+  const statusMap: Record<string, CampaignEntry['status']> = {
+    draft: 'submitted',
+    pending_payment: 'reviewing',
+    active: 'live',
+    completed: 'completed',
+    cancelled: 'rejected',
+  };
+  return {
+    id: c.id,
+    name: c.campaignName,
+    advertiser: c.advertiserId,
+    status: statusMap[c.status] ?? 'submitted',
+    vehicles: c.selectedVehicleIds.length,
+    budget: c.totalCost,
+    startDate: c.startDate,
+    endDate: c.endDate,
+    kmCovered: 0,
+    objective: c.objective,
+  };
+}
+
+function adminStatusToFirestore(status: CampaignEntry['status']): FirestoreCampaign['status'] {
+  const map: Record<string, FirestoreCampaign['status']> = {
+    submitted: 'draft',
+    reviewing: 'pending_payment',
+    approved: 'active',
+    live: 'active',
+    completed: 'completed',
+    rejected: 'cancelled',
+  };
+  return map[status] ?? 'draft';
+}
 
 // ─── Status Config ────────────────────────────────────────────────────────────
 
@@ -259,13 +324,53 @@ function OwnersView({
     return '';
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const err = validate();
     if (err) { setError(err); return; }
     setLoading(true);
-    setTimeout(() => {
-      const effectiveRate = form.priceOverride ? Number(form.priceOverride) : Number(form.monthlyRate);
+    setError('');
+
+    const effectiveRate = form.priceOverride ? Number(form.priceOverride) : Number(form.monthlyRate);
+
+    if (!firebaseReady) {
+      // Mock fallback
+      setTimeout(() => {
+        if (editId) {
+          setOwners((prev) =>
+            prev.map((o) =>
+              o.id === editId
+                ? { ...o, name: form.name, phone: form.phone, vehicleType: form.vehicleType as 'auto' | 'taxi', registrationNumber: form.registrationNumber, area: form.area, monthlyRate: effectiveRate }
+                : o,
+            ),
+          );
+          setEditId(null);
+        } else {
+          setOwners((prev) => [{
+            id: Date.now().toString(), name: form.name, phone: form.phone,
+            vehicleType: form.vehicleType as 'auto' | 'taxi', registrationNumber: form.registrationNumber,
+            area: form.area, monthlyRate: effectiveRate, status: 'pending',
+            addedAt: new Date().toISOString().split('T')[0],
+          }, ...prev]);
+        }
+        setSmsSuccess(`✅ SMS confirmation sent to +91 ${form.phone}`);
+        setForm(emptyOwnerForm);
+        setLoading(false);
+        setTimeout(() => setSmsSuccess(''), 4000);
+      }, 1200);
+      return;
+    }
+
+    try {
       if (editId) {
+        await updateOwnerProfile(editId, {
+          name: form.name,
+          phone: form.phone,
+          vehicleType: form.vehicleType as 'auto' | 'taxi',
+          registrationNumber: form.registrationNumber,
+          operatingAreas: [form.area],
+          monthlyRate: effectiveRate,
+          updatedAt: new Date().toISOString(),
+        });
         setOwners((prev) =>
           prev.map((o) =>
             o.id === editId
@@ -275,8 +380,26 @@ function OwnersView({
         );
         setEditId(null);
       } else {
+        const ownerId = `owner_admin_${Date.now()}`;
+        await createOwnerProfile({
+          id: ownerId,
+          userId: ownerId,
+          name: form.name,
+          phone: form.phone,
+          vehicleType: form.vehicleType as 'auto' | 'taxi',
+          registrationNumber: form.registrationNumber,
+          operatingAreas: [form.area],
+          vehiclePhotoUrl: '',
+          rcDocumentUrl: '',
+          insuranceDocumentUrl: '',
+          monthlyRate: effectiveRate,
+          upiId: '',
+          verificationStatus: 'pending',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
         setOwners((prev) => [{
-          id: Date.now().toString(), name: form.name, phone: form.phone,
+          id: ownerId, name: form.name, phone: form.phone,
           vehicleType: form.vehicleType as 'auto' | 'taxi', registrationNumber: form.registrationNumber,
           area: form.area, monthlyRate: effectiveRate, status: 'pending',
           addedAt: new Date().toISOString().split('T')[0],
@@ -284,9 +407,12 @@ function OwnersView({
       }
       setSmsSuccess(`✅ SMS confirmation sent to +91 ${form.phone}`);
       setForm(emptyOwnerForm);
-      setLoading(false);
       setTimeout(() => setSmsSuccess(''), 4000);
-    }, 1200);
+    } catch (saveErr) {
+      setError(saveErr instanceof Error ? saveErr.message : 'Failed to save owner. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEdit = (o: OwnerEntry) => {
@@ -362,7 +488,18 @@ function OwnersView({
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                       <Typography sx={{ fontWeight: 700, fontSize: '0.9rem' }}>{owner.name}</Typography>
                       <Chip label={owner.status} size="small"
-                        onClick={() => setOwners((prev) => prev.map((o) => o.id === owner.id ? { ...o, status: o.status === 'active' ? 'inactive' : 'active' } : o))}
+                        onClick={() => {
+                          const newStatus: OwnerEntry['status'] = owner.status === 'active' ? 'inactive' : 'active';
+                          const firestoreStatus = newStatus === 'active' ? 'verified' : 'rejected';
+                          setOwners((prev) => prev.map((o) => o.id === owner.id ? { ...o, status: newStatus } : o));
+                          if (firebaseReady) {
+                            updateOwnerProfile(owner.id, { verificationStatus: firestoreStatus, updatedAt: new Date().toISOString() })
+                              .catch(() => {
+                                // Revert UI state on failure
+                                setOwners((prev) => prev.map((o) => o.id === owner.id ? { ...o, status: owner.status } : o));
+                              });
+                          }
+                        }}
                         sx={{ background: ownerStatusConfig[owner.status].bg, color: ownerStatusConfig[owner.status].color, fontWeight: 600, fontSize: '0.65rem', cursor: 'pointer' }} />
                     </Box>
                     <Typography sx={{ fontSize: '0.78rem', color: '#6B5E54' }}>
@@ -390,7 +527,15 @@ function OwnersView({
 
 function CampaignsView({ campaigns, setCampaigns }: { campaigns: CampaignEntry[]; setCampaigns: React.Dispatch<React.SetStateAction<CampaignEntry[]>> }) {
   const updateStatus = (id: string, status: CampaignEntry['status']) => {
-    setCampaigns((prev) => prev.map((c) => c.id === id ? { ...c, status } : c));
+    const prev = campaigns.find((c) => c.id === id)?.status;
+    setCampaigns((list) => list.map((c) => c.id === id ? { ...c, status } : c));
+    if (firebaseReady) {
+      updateCampaign(id, { status: adminStatusToFirestore(status), updatedAt: new Date().toISOString() })
+        .catch(() => {
+          // Revert UI state on failure
+          if (prev) setCampaigns((list) => list.map((c) => c.id === id ? { ...c, status: prev } : c));
+        });
+    }
   };
 
   return (
@@ -547,6 +692,23 @@ export default function AdminPanel() {
   const [view, setView] = useState<AdminView>('overview');
   const [owners, setOwners] = useState<OwnerEntry[]>(MOCK_OWNERS);
   const [campaigns, setCampaigns] = useState<CampaignEntry[]>(MOCK_CAMPAIGNS);
+
+  // Load real data from Firestore on mount
+  useEffect(() => {
+    if (!firebaseReady) return;
+    Promise.all([getAllOwners(), getAllCampaigns()])
+      .then(([firestoreOwners, firestoreCampaigns]) => {
+        if (firestoreOwners.length > 0) {
+          setOwners(firestoreOwners.map(ownerProfileToEntry));
+        }
+        if (firestoreCampaigns.length > 0) {
+          setCampaigns(firestoreCampaigns.map(firestoreToCampaignEntry));
+        }
+      })
+      .catch(() => {
+        // Fall back to mock data on error
+      });
+  }, []);
 
   const pendingOwners = owners.filter((o) => o.status === 'pending').length;
   const pendingCampaigns = campaigns.filter((c) => c.status === 'submitted' || c.status === 'reviewing').length;

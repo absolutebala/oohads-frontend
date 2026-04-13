@@ -2,10 +2,13 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Box, AppBar, Toolbar, Typography, Button } from '@mui/material';
+import { Box, AppBar, Toolbar, Typography, Button, CircularProgress } from '@mui/material';
+import LogoutIcon from '@mui/icons-material/Logout';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import theme from './theme/theme';
 import './styles/global.css';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuthContext } from './context/AuthContext';
+import { firebaseReady } from './config/firebase';
 
 import Homepage from './components/Home/Homepage';
 import Login from './components/Auth/Login';
@@ -25,6 +28,7 @@ const NAV_ITEMS = [
 
 function NavBar() {
   const location = useLocation();
+  const { isAuthenticated, userProfile, logout } = useAuthContext();
   return (
     <AppBar
       position="static"
@@ -61,9 +65,52 @@ function NavBar() {
             {item.label}
           </Button>
         ))}
+        {isAuthenticated && (
+          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <AccountCircleIcon sx={{ fontSize: 20, color: 'rgba(255,255,255,0.7)' }} />
+              <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)' }}>
+                {userProfile?.name}
+              </Typography>
+            </Box>
+            <Button
+              size="small"
+              startIcon={<LogoutIcon fontSize="small" />}
+              onClick={logout}
+              sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem', '&:hover': { color: '#FFFFFF', background: 'rgba(255,255,255,0.06)' } }}
+            >
+              Logout
+            </Button>
+          </Box>
+        )}
       </Toolbar>
     </AppBar>
   );
+}
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  adminOnly?: boolean;
+}
+
+function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading, userProfile } = useAuthContext();
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 64px)' }}>
+        <CircularProgress sx={{ color: '#E8521A' }} />
+      </Box>
+    );
+  }
+
+  // When Firebase is not configured, allow access (development / no-env mode)
+  if (!firebaseReady) return <>{children}</>;
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (adminOnly && userProfile?.role !== 'admin') return <Navigate to="/" replace />;
+
+  return <>{children}</>;
 }
 
 function App() {
@@ -78,10 +125,10 @@ function App() {
               <Routes>
                 <Route path="/" element={<Homepage />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/owner-onboarding" element={<OwnerOnboarding />} />
-                <Route path="/admin" element={<AdminPanel />} />
-                <Route path="/campaign" element={<CampaignBooking />} />
-                <Route path="/dashboard" element={<AdvertiserDashboard />} />
+                <Route path="/owner-onboarding" element={<ProtectedRoute><OwnerOnboarding /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPanel /></ProtectedRoute>} />
+                <Route path="/campaign" element={<ProtectedRoute><CampaignBooking /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute><AdvertiserDashboard /></ProtectedRoute>} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Box>

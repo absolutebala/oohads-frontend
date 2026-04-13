@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Box,
   Card,
@@ -22,6 +22,10 @@ import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { Vehicle } from '../../types';
+import { firebaseReady } from '../../config/firebase';
+import { getOwnersByStatus, createCampaign } from '../../services/firebase/firestore';
+import { uploadCampaignArtwork } from '../../services/firebase/storage';
+import { useAuthContext } from '../../context/AuthContext';
 
 const BRAND = '#E8521A';
 
@@ -33,7 +37,6 @@ const MOCK_VEHICLES: Vehicle[] = [
   { id: 'v5', registrationNumber: 'TN01IJ7890', type: 'auto', area: 'T. Nagar', ownerName: 'Kavitha M', monthlyRate: 2600, kmPerDay: 70, status: 'available' },
   { id: 'v6', registrationNumber: 'TN01KL2345', type: 'taxi', area: 'Porur', ownerName: 'Babu S', monthlyRate: 3000, kmPerDay: 110, status: 'available' },
 ];
-
 const AREAS = ['All Areas', 'T. Nagar', 'Velachery', 'Anna Nagar', 'Adyar', 'Porur', 'Mylapore'];
 const OBJECTIVES = ['Brand Awareness', 'Product Launch', 'Event Promotion', 'App Install', 'Store Traffic'];
 
@@ -95,12 +98,17 @@ const StatusTimeline = ({ status }: { status: 'submitted' | 'reviewing' | 'appro
 };
 
 export default function CampaignBooking() {
+  const { firebaseUser } = useAuthContext();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [areaFilter, setAreaFilter] = useState('All Areas');
   const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([]);
   const [artworkFileName, setArtworkFileName] = useState('');
+  const [artworkFile, setArtworkFile] = useState<File | null>(null);
+  const artworkInputRef = useRef<HTMLInputElement>(null);
+  const [allVehicles, setAllVehicles] = useState<Vehicle[]>(MOCK_VEHICLES);
+  const [vehiclesLoading, setVehiclesLoading] = useState(false);
   const [campaignDetails, setCampaignDetails] = useState<CampaignDetails>({
     campaignName: '',
     startDate: '',
@@ -109,12 +117,38 @@ export default function CampaignBooking() {
     objective: '',
   });
 
+  // Fetch verified owners from Firestore on mount
+  useEffect(() => {
+    if (!firebaseReady) return;
+    setVehiclesLoading(true);
+    getOwnersByStatus('verified')
+      .then((owners) => {
+        if (owners.length > 0) {
+          const vehicles: Vehicle[] = owners.map((o) => ({
+            id: o.id,
+            registrationNumber: o.registrationNumber,
+            type: o.vehicleType,
+            area: o.operatingAreas[0] ?? '',
+            ownerName: o.name,
+            monthlyRate: o.monthlyRate,
+            kmPerDay: 80, // default
+            status: 'available' as const,
+          }));
+          setAllVehicles(vehicles);
+        }
+      })
+      .catch(() => {
+        // Fall back to mock data on error
+      })
+      .finally(() => setVehiclesLoading(false));
+  }, []);
+
   const filteredVehicles = useMemo(() =>
-    areaFilter === 'All Areas' ? MOCK_VEHICLES : MOCK_VEHICLES.filter((v) => v.area === areaFilter),
-    [areaFilter]
+    areaFilter === 'All Areas' ? allVehicles : allVehicles.filter((v) => v.area === areaFilter),
+    [areaFilter, allVehicles]
   );
 
-  const selectedVehicles = MOCK_VEHICLES.filter((v) => selectedVehicleIds.includes(v.id));
+  const selectedVehicles = allVehicles.filter((v) => selectedVehicleIds.includes(v.id));
   const totalMonthlyCost = selectedVehicles.reduce((sum, v) => sum + v.monthlyRate, 0);
   const estimatedKm = selectedVehicles.reduce((sum, v) => sum + v.kmPerDay * campaignDetails.durationDays, 0);
   const costForDuration = Math.round(totalMonthlyCost * (campaignDetails.durationDays / 30));
@@ -148,9 +182,49 @@ export default function CampaignBooking() {
     setStep((s) => s + 1);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setLoading(true);
-    setTimeout(() => { setLoading(false); setStep(4); }, 1500);
+    setError('');
+
+    if (!firebaseReady) {
+      // Mock fallback
+      setTimeout(() => { setLoading(false); setStep(4); }, 1500);
+      return;
+    }
+
+    try {
+      const campaignId = `campaign_${Date.now()}`;
+      const advertiserId = firebaseUser?.uid ?? 'anonymous';
+
+      let artworkUrl = '';
+      if (artworkFile) {
+        const result = await uploadCampaignArtwork(campaignId, artworkFile);
+        artworkUrl = result.downloadUrl;
+      }
+
+      await createCampaign({
+        id: campaignId,
+        advertiserId,
+        campaignName: campaignDetails.campaignName,
+        startDate: campaignDetails.startDate,
+        endDate: campaignDetails.endDate,
+        durationDays: campaignDetails.durationDays,
+        objective: campaignDetails.objective,
+        status: 'draft',
+        selectedVehicleIds,
+        artworkUrl,
+        totalCost: costForDuration,
+        approvals: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+
+      setLoading(false);
+      setStep(4);
+    } catch (err) {
+      setLoading(false);
+      setError(err instanceof Error ? err.message : 'Failed to submit campaign. Please try again.');
+    }
   };
 
   return (
@@ -197,6 +271,11 @@ export default function CampaignBooking() {
                   </FormControl>
                 </Box>
 
+                {vehiclesLoading ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+                    <CircularProgress size={32} sx={{ color: BRAND }} />
+                  </Box>
+                ) : (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                   {filteredVehicles.map((vehicle) => {
                     const isSelected = selectedVehicleIds.includes(vehicle.id);
@@ -231,6 +310,7 @@ export default function CampaignBooking() {
                     );
                   })}
                 </Box>
+                )}
 
                 {selectedVehicleIds.length > 0 && (
                   <Alert severity="success" sx={{ mt: 2 }}>
@@ -300,8 +380,23 @@ export default function CampaignBooking() {
               <Card sx={{ p: 3, border: '1px solid rgba(26,21,16,0.08)' }}>
                 <Typography sx={{ fontWeight: 700, mb: 2 }}>Upload Campaign Artwork</Typography>
 
+                {/* Hidden file input */}
+                <input
+                  ref={artworkInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setArtworkFile(file);
+                      setArtworkFileName(file.name);
+                    }
+                  }}
+                />
+
                 <Box
-                  onClick={() => setArtworkFileName(`artwork_${Date.now()}.jpg`)}
+                  onClick={() => artworkInputRef.current?.click()}
                   sx={{
                     border: `3px dashed ${artworkFileName ? BRAND : 'rgba(26,21,16,0.2)'}`,
                     borderRadius: 3,

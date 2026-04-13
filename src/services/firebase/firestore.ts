@@ -8,6 +8,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   Timestamp,
   DocumentData,
   QueryConstraint,
@@ -202,6 +203,20 @@ export async function getCampaignsByAdvertiser(advertiserId: string): Promise<Ca
 export async function getCampaignsByStatus(status: Campaign['status']): Promise<Campaign[]> {
   const ref = collection(firestore, COLLECTIONS.CAMPAIGNS);
   const q = query(ref, where('status', '==', status), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => snapToCampaign(d.id, d.data()));
+}
+
+export async function getAllOwners(maxResults = 100): Promise<OwnerProfile[]> {
+  const ref = collection(firestore, COLLECTIONS.OWNERS);
+  const q = query(ref, orderBy('createdAt', 'desc'), limit(maxResults));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => snapToOwnerProfile(d.id, d.data()));
+}
+
+export async function getAllCampaigns(maxResults = 100): Promise<Campaign[]> {
+  const ref = collection(firestore, COLLECTIONS.CAMPAIGNS);
+  const q = query(ref, orderBy('createdAt', 'desc'), limit(maxResults));
   const snap = await getDocs(q);
   return snap.docs.map((d) => snapToCampaign(d.id, d.data()));
 }
