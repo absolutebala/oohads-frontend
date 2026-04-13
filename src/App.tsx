@@ -16,6 +16,7 @@ import OwnerOnboarding from './components/OnBoarding/OwnerOnboarding';
 import AdminPanel from './components/Admin/AdminPanel';
 import CampaignBooking from './components/Campaigns/CampaignBooking';
 import AdvertiserDashboard from './components/Dashboard/AdvertiserDashboard';
+import OwnerDashboard from './components/Dashboard/OwnerDashboard';
 
 // ── NavBar ────────────────────────────────────────────────────────────────────
 
@@ -42,9 +43,7 @@ function NavBar() {
     }
     if (role === 'owner') {
       return [
-        { label: 'Home', path: '/' },
-        { label: 'Owner Onboarding', path: '/owner-onboarding' },
-        { label: 'Dashboard', path: '/dashboard' },
+        { label: 'Owner Dashboard', path: '/owner-dashboard' },
       ];
     }
     // advertiser — no nav links, only logo + profile/logout
@@ -63,7 +62,7 @@ function NavBar() {
       <Toolbar sx={{ gap: 1, flexWrap: 'wrap' }}>
         <Typography
           component={Link}
-          to={role === 'advertiser' ? '/dashboard' : '/'}
+          to={role === 'advertiser' ? '/dashboard' : role === 'owner' ? '/owner-dashboard' : '/'}
           variant="h6"
           sx={{ fontFamily: '"Syne", sans-serif', fontWeight: 800, mr: 2, textDecoration: 'none', color: 'inherit' }}
         >
@@ -136,7 +135,7 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   if (allowedRoles && userProfile && !allowedRoles.includes(userProfile.role)) {
     // Redirect to role-appropriate home instead of a blank 403
     if (userProfile.role === 'admin') return <Navigate to="/admin" replace />;
-    if (userProfile.role === 'owner') return <Navigate to="/owner-onboarding" replace />;
+    if (userProfile.role === 'owner') return <Navigate to="/owner-dashboard" replace />;
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -157,7 +156,7 @@ function LoginRoute() {
 
   if (isAuthenticated && firebaseReady) {
     if (userProfile?.role === 'admin') return <Navigate to="/admin" replace />;
-    if (userProfile?.role === 'owner') return <Navigate to="/owner-onboarding" replace />;
+    if (userProfile?.role === 'owner') return <Navigate to="/owner-dashboard" replace />;
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -207,6 +206,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={['advertiser', 'admin']}>
                       <AdvertiserDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/owner-dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={['owner']}>
+                      <OwnerDashboard />
                     </ProtectedRoute>
                   }
                 />
