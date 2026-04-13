@@ -14,11 +14,13 @@ import { firebaseReady } from './config/firebase';
 
 import Homepage from './components/Home/Homepage';
 import Login from './components/Auth/Login';
+import AdminLogin from './components/Auth/AdminLogin';
 import OwnerOnboarding from './components/OnBoarding/OwnerOnboarding';
 import AdminPanel from './components/Admin/AdminPanel';
 import CampaignBooking from './components/Campaigns/CampaignBooking';
 import AdvertiserDashboard from './components/Dashboard/AdvertiserDashboard';
 import OwnerDashboard from './components/Dashboard/OwnerDashboard';
+import { isAdminSessionValid, clearAdminSession } from './utils/adminAuth';
 
 // ── NavBar ────────────────────────────────────────────────────────────────────
 
@@ -28,9 +30,25 @@ function NavBar() {
   const { isAuthenticated, userProfile, logout } = useAuthContext();
 
   const role = userProfile?.role;
+  const localAdminActive = isAdminSessionValid();
+
+  const handleLogout = () => {
+    if (localAdminActive) {
+      clearAdminSession();
+      navigate('/admin-login');
+    } else {
+      logout();
+    }
+  };
 
   // Determine which nav items to show based on auth state and role
   const navItems: { label: string; path: string }[] = (() => {
+    if (localAdminActive) {
+      return [
+        { label: 'Home', path: '/' },
+        { label: 'Admin Panel', path: '/admin' },
+      ];
+    }
     if (!isAuthenticated || !firebaseReady) {
       return [];
     }
@@ -86,18 +104,18 @@ function NavBar() {
             {item.label}
           </Button>
         ))}
-        {isAuthenticated ? (
+        {(isAuthenticated || localAdminActive) ? (
           <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <AccountCircleIcon sx={{ fontSize: 20, color: 'rgba(255,255,255,0.7)' }} />
               <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)' }}>
-                {userProfile?.name}
+                {localAdminActive && !isAuthenticated ? 'Admin' : userProfile?.name}
               </Typography>
             </Box>
             <Button
               size="small"
               startIcon={<LogoutIcon fontSize="small" />}
-              onClick={logout}
+              onClick={handleLogout}
               sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem', '&:hover': { color: '#FFFFFF', background: 'rgba(255,255,255,0.06)' } }}
             >
               Logout
@@ -183,6 +201,37 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   return <>{children}</>;
 }
 
+/**
+ * Guard for the admin panel.
+ * Grants access when either:
+ *  - A valid local admin session exists (credentials verified at /admin-login), or
+ *  - Firebase is ready and the authenticated user has the 'admin' role.
+ */
+function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, userProfile } = useAuthContext();
+
+  // Always allow when a local admin session is active
+  if (isAdminSessionValid()) return <>{children}</>;
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 64px)' }}>
+        <CircularProgress sx={{ color: '#E8521A' }} />
+      </Box>
+    );
+  }
+
+  // When Firebase is not configured, still require local admin authentication
+  if (!isAuthenticated) return <Navigate to="/admin-login" replace />;
+
+  if (userProfile && userProfile.role !== 'admin') {
+    if (userProfile.role === 'owner') return <Navigate to="/owner-dashboard" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 /** Redirects already-authenticated users away from the login page */
 function LoginRoute() {
   const { isAuthenticated, isLoading, userProfile } = useAuthContext();
@@ -204,6 +253,12 @@ function LoginRoute() {
   return <Login />;
 }
 
+/** Redirects to /admin when an admin session is already active */
+function AdminLoginRoute() {
+  if (isAdminSessionValid()) return <Navigate to="/admin" replace />;
+  return <AdminLogin />;
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 
 function App() {
@@ -218,6 +273,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Homepage />} />
                 <Route path="/login" element={<LoginRoute />} />
+                <Route path="/admin-login" element={<AdminLoginRoute />} />
                 <Route
                   path="/owner-onboarding"
                   element={
@@ -229,9 +285,9 @@ function App() {
                 <Route
                   path="/admin"
                   element={
-                    <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminProtectedRoute>
                       <AdminPanel />
-                    </ProtectedRoute>
+                    </AdminProtectedRoute>
                   }
                 />
                 <Route
