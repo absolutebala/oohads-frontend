@@ -1,10 +1,9 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from 'firebase/auth';
 import { onAuthStateChange, logout as firebaseLogout } from '../services/firebase/auth';
 import { getUserById, UserProfile } from '../services/firebase/firestore';
-import { authService } from '../services/api/services/authService';
-import { clearTokens, hasValidToken } from '../utils/tokenManager';
+import { clearTokens } from '../utils/tokenManager';
 import { SESSION_EXPIRED_EVENT } from '../services/api/config';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -23,6 +22,11 @@ interface AuthContextValue extends AuthState {
   logout: () => Promise<void>;
 }
 
+// Milliseconds to wait before retrying a Firestore profile lookup.
+// Accounts for the brief window between Firebase auth succeeding and the
+// profile document being written to Firestore by the Login component.
+const PROFILE_CREATION_RETRY_DELAY_MS = 1500;
+
 // ── Context ───────────────────────────────────────────────────────────────────
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -35,6 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  // Tracks whether initial auth resolution is still in progress.
+  // Used to suppress SESSION_EXPIRED_EVENT during the login flow.
+  const isLoadingRef = useRef(true);
 
   const refreshUserProfile = useCallback(async () => {
     if (!firebaseUser) return;
@@ -48,7 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await authService.logout();
       await firebaseLogout();
     } catch (err) {
       console.error('[AuthContext] Logout error:', err);
@@ -61,6 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const handleSessionExpired = () => {
+      // Suppress during initial auth resolution to avoid logging out mid-login
+      if (isLoadingRef.current) return;
       setFirebaseUser(null);
       setUserProfile(null);
       navigate('/');
@@ -75,17 +83,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (user) {
         try {
-          const profile = await getUserById(user.uid);
-          setUserProfile(profile);
+          let profile = await getUserById(user.uid);
 
-          // If no backend tokens, attempt a silent refresh
-          if (!hasValidToken()) {
-            try {
-              await authService.refreshToken('');
-            } catch {
-              // Silent failure – user may need to re-authenticate
+          // Retry once after a short delay to handle the race condition where
+          // a first-time user's profile hasn't been written to Firestore yet.
+          if (!profile) {
+            await new Promise((resolve) => setTimeout(resolve, PROFILE_CREATION_RETRY_DELAY_MS));
+            profile = await getUserById(user.uid);
+            if (!profile) {
+              console.warn('[AuthContext] User profile not found after retry — may be a new user still setting up their profile.');
             }
           }
+
+          setUserProfile(profile);
         } catch (err) {
           console.error('[AuthContext] Error loading user profile:', err);
           setError('Failed to load user profile.');
@@ -95,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearTokens();
       }
 
+      isLoadingRef.current = false;
       setIsLoading(false);
     });
 

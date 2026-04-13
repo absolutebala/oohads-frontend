@@ -72,8 +72,13 @@ apiClient.interceptors.response.use(
       } catch {
         clearTokens();
         refreshQueue = [];
-        // Dispatch a custom event so the React app can handle navigation
-        window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
+        // Don't dispatch session-expired for the refresh-token endpoint itself
+        // (avoids infinite loops and spurious logouts during the auth flow).
+        const requestUrl = originalRequest.url ?? '';
+        const isRefreshEndpoint = requestUrl.split('?')[0].endsWith('/auth/refresh-token');
+        if (!isRefreshEndpoint) {
+          window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
+        }
         return Promise.reject(error);
       } finally {
         isRefreshing = false;
