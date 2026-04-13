@@ -744,7 +744,7 @@ export default function AdminPanel() {
       >
         {/* Logo */}
         <Box sx={{ px: 2, mb: 3 }}>
-          <Typography sx={{ fontFamily: '"Syne", sans-serif', fontWeight: 800, fontSize: '1.2rem' }}>
+          <Typography sx={{ fontFamily: '"Poppins", sans-serif', fontWeight: 800, fontSize: '1.2rem' }}>
             Ad<span style={{ color: BRAND }}>Ride</span>
           </Typography>
           <Typography sx={{ fontSize: '0.7rem', color: '#6B5E54', mt: 0.25 }}>Admin Console</Typography>

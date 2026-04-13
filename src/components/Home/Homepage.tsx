@@ -150,7 +150,7 @@ export default function Homepage() {
             <Typography
               variant="h2"
               sx={{
-                fontFamily: '"Syne", sans-serif',
+                fontFamily: '"Poppins", sans-serif',
                 fontWeight: 800,
                 fontSize: { xs: '2.2rem', md: '2.8rem', lg: '3.4rem' },
                 lineHeight: 1.1,
@@ -344,7 +344,7 @@ export default function Homepage() {
                         justifyContent: 'center',
                         background: AD_BANNERS[adIndex].bg,
                         color: AD_BANNERS[adIndex].color,
-                        fontFamily: '"Syne", sans-serif',
+                        fontFamily: '"Poppins", sans-serif',
                         fontSize: '0.68rem',
                         fontWeight: 700,
                         letterSpacing: '0.5px',
@@ -472,7 +472,7 @@ export default function Homepage() {
                 }}
               >
                 <Typography sx={{ fontSize: '0.68rem', color: '#6B5E54', lineHeight: 1.3 }}>Campaign live in</Typography>
-                <Typography sx={{ fontFamily: '"Syne"', fontWeight: 700, fontSize: '0.9rem', color: '#1A1510', lineHeight: 1.3 }}>
+                <Typography sx={{ fontFamily: '"Poppins"', fontWeight: 700, fontSize: '0.9rem', color: '#1A1510', lineHeight: 1.3 }}>
                   Anna Nagar
                 </Typography>
                 <Typography sx={{ fontSize: '0.68rem', color: BRAND, lineHeight: 1.3 }}>24 vehicles · active now</Typography>
@@ -495,7 +495,7 @@ export default function Homepage() {
                 }}
               >
                 <Typography sx={{ fontSize: '0.68rem', color: '#6B5E54', lineHeight: 1.3 }}>Impressions today</Typography>
-                <Typography sx={{ fontFamily: '"Syne"', fontWeight: 700, fontSize: '0.9rem', color: '#1A1510', lineHeight: 1.3 }}>
+                <Typography sx={{ fontFamily: '"Poppins"', fontWeight: 700, fontSize: '0.9rem', color: '#1A1510', lineHeight: 1.3 }}>
                   18,240
                 </Typography>
                 <Typography sx={{ fontSize: '0.68rem', color: '#2e7d32', lineHeight: 1.3 }}>↑ 12% vs yesterday</Typography>
@@ -518,7 +518,7 @@ export default function Homepage() {
                 }}
               >
                 <Typography sx={{ fontSize: '0.68rem', color: '#6B5E54', lineHeight: 1.3 }}>Areas covered</Typography>
-                <Typography sx={{ fontFamily: '"Syne"', fontWeight: 700, fontSize: '0.9rem', color: '#1A1510', lineHeight: 1.3 }}>
+                <Typography sx={{ fontFamily: '"Poppins"', fontWeight: 700, fontSize: '0.9rem', color: '#1A1510', lineHeight: 1.3 }}>
                   T. Nagar · Adyar
                 </Typography>
                 <Typography sx={{ fontSize: '0.68rem', color: '#6B5E54', lineHeight: 1.3 }}>+ 6 more zones</Typography>
@@ -542,7 +542,7 @@ export default function Homepage() {
             <Box key={stat.label}>
               <Typography
                 sx={{
-                  fontFamily: '"Syne", sans-serif',
+                  fontFamily: '"Poppins", sans-serif',
                   fontWeight: 800,
                   fontSize: { xs: '1.6rem', md: '2rem' },
                   color: BRAND,
@@ -571,7 +571,7 @@ export default function Homepage() {
           <Typography
             variant="h3"
             sx={{
-              fontFamily: '"Syne", sans-serif',
+              fontFamily: '"Poppins", sans-serif',
               fontWeight: 800,
               fontSize: { xs: '1.8rem', md: '2.4rem' },
               mb: 1,
@@ -644,7 +644,7 @@ export default function Homepage() {
           <Typography
             variant="h3"
             sx={{
-              fontFamily: '"Syne", sans-serif',
+              fontFamily: '"Poppins", sans-serif',
               fontWeight: 800,
               fontSize: { xs: '1.8rem', md: '2.4rem' },
             }}
@@ -677,7 +677,7 @@ export default function Homepage() {
               >
                 <CampaignIcon fontSize="small" />
               </Box>
-              <Typography sx={{ fontFamily: '"Syne", sans-serif', fontWeight: 700, fontSize: '1.1rem' }}>
+              <Typography sx={{ fontFamily: '"Poppins", sans-serif', fontWeight: 700, fontSize: '1.1rem' }}>
                 For Advertisers
               </Typography>
             </Box>
@@ -686,7 +686,7 @@ export default function Homepage() {
                 <Box key={item.step} sx={{ display: 'flex', gap: 2 }}>
                   <Typography
                     sx={{
-                      fontFamily: '"Syne", sans-serif',
+                      fontFamily: '"Poppins", sans-serif',
                       fontWeight: 800,
                       fontSize: '1.4rem',
                       color: `${BRAND}30`,
@@ -731,7 +731,7 @@ export default function Homepage() {
               >
                 <DirectionsCarIcon fontSize="small" />
               </Box>
-              <Typography sx={{ fontFamily: '"Syne", sans-serif', fontWeight: 700, fontSize: '1.1rem' }}>
+              <Typography sx={{ fontFamily: '"Poppins", sans-serif', fontWeight: 700, fontSize: '1.1rem' }}>
                 For Vehicle Owners
               </Typography>
             </Box>
@@ -740,7 +740,7 @@ export default function Homepage() {
                 <Box key={item.step} sx={{ display: 'flex', gap: 2 }}>
                   <Typography
                     sx={{
-                      fontFamily: '"Syne", sans-serif',
+                      fontFamily: '"Poppins", sans-serif',
                       fontWeight: 800,
                       fontSize: '1.4rem',
                       color: 'rgba(26,21,16,0.12)',
@@ -783,7 +783,7 @@ export default function Homepage() {
         <Typography
           variant="h3"
           sx={{
-            fontFamily: '"Syne", sans-serif',
+            fontFamily: '"Poppins", sans-serif',
             fontWeight: 800,
             fontSize: { xs: '1.8rem', md: '2.4rem' },
             mb: 1.5,
@@ -844,7 +844,7 @@ export default function Homepage() {
         }}
       >
         <Typography
-          sx={{ fontFamily: '"Syne", sans-serif', fontWeight: 800, color: '#fff', fontSize: '1.1rem' }}
+          sx={{ fontFamily: '"Poppins", sans-serif', fontWeight: 800, color: '#fff', fontSize: '1.1rem' }}
         >
           Ad<span style={{ color: BRAND }}>Ride</span>
         </Typography>

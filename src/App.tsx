@@ -64,7 +64,7 @@ function NavBar() {
           component={Link}
           to={role === 'advertiser' ? '/dashboard' : role === 'owner' ? '/owner-dashboard' : '/'}
           variant="h6"
-          sx={{ fontFamily: '"Syne", sans-serif', fontWeight: 800, mr: 2, textDecoration: 'none', color: 'inherit' }}
+          sx={{ fontFamily: '"Poppins", sans-serif', fontWeight: 800, mr: 2, textDecoration: 'none', color: 'inherit' }}
         >
           Ad<span style={{ color: '#E8521A' }}>Ride</span>
         </Typography>

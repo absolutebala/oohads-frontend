@@ -279,7 +279,7 @@ export default function Login() {
         }}
       >
         <Box>
-          <Typography variant="h4" sx={{ fontFamily: '"Syne", sans-serif', fontWeight: 800, mb: 1 }}>
+          <Typography variant="h4" sx={{ fontFamily: '"Poppins", sans-serif', fontWeight: 800, mb: 1 }}>
             Ad<span style={{ color: BRAND }}>Ride</span>
           </Typography>
           <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem', mt: 1 }}>
