@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -51,6 +51,7 @@ function redirectAfterLogin(role: TabRole, navigate: ReturnType<typeof useNaviga
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { refreshUserProfile } = useAuthContext();
   const [tabRole, setTabRole] = useState<TabRole | null>(null);
   const [step, setStep] = useState<Step>('entry');
@@ -59,6 +60,15 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [verifiedUser, setVerifiedUser] = useState<User | null>(null);
   const [error, setError] = useState('');
+
+  // Auto-select tab based on ?role= query param
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const roleParam = params.get('role');
+    if (roleParam === 'owner' || roleParam === 'advertiser') {
+      setTabRole(roleParam);
+    }
+  }, [location.search]);
 
   const handleTabChange = (_: React.SyntheticEvent, newRole: TabRole) => {
     setTabRole(newRole);

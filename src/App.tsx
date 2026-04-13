@@ -1,10 +1,12 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box, AppBar, Toolbar, Typography, Button, CircularProgress } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
+import CampaignIcon from '@mui/icons-material/Campaign';
 import theme from './theme/theme';
 import './styles/global.css';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
@@ -22,6 +24,7 @@ import OwnerDashboard from './components/Dashboard/OwnerDashboard';
 
 function NavBar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated, userProfile, logout } = useAuthContext();
 
   const role = userProfile?.role;
@@ -29,10 +32,7 @@ function NavBar() {
   // Determine which nav items to show based on auth state and role
   const navItems: { label: string; path: string }[] = (() => {
     if (!isAuthenticated || !firebaseReady) {
-      return [
-        { label: 'Home', path: '/' },
-        { label: 'Login', path: '/login' },
-      ];
+      return [];
     }
     if (role === 'admin') {
       return [
@@ -86,7 +86,7 @@ function NavBar() {
             {item.label}
           </Button>
         ))}
-        {isAuthenticated && (
+        {isAuthenticated ? (
           <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <AccountCircleIcon sx={{ fontSize: 20, color: 'rgba(255,255,255,0.7)' }} />
@@ -101,6 +101,47 @@ function NavBar() {
               sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem', '&:hover': { color: '#FFFFFF', background: 'rgba(255,255,255,0.06)' } }}
             >
               Logout
+            </Button>
+          </Box>
+        ) : (
+          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<DirectionsCarIcon fontSize="small" />}
+              onClick={() => navigate('/login?role=owner')}
+              sx={{
+                border: '1px solid rgba(255,255,255,0.3)',
+                color: '#FFFFFF',
+                background: 'transparent',
+                borderRadius: '100px',
+                fontSize: '0.8rem',
+                px: '16px',
+                py: '6px',
+                textTransform: 'none',
+                '&:hover': { border: '1px solid rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.06)' },
+              }}
+            >
+              Owner Login
+            </Button>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<CampaignIcon fontSize="small" />}
+              onClick={() => navigate('/login?role=advertiser')}
+              sx={{
+                background: '#E8521A',
+                color: '#FFFFFF',
+                borderRadius: '100px',
+                fontSize: '0.8rem',
+                px: '16px',
+                py: '6px',
+                textTransform: 'none',
+                boxShadow: 'none',
+                '&:hover': { background: '#B83D0F', boxShadow: 'none' },
+              }}
+            >
+              Advertiser Login
             </Button>
           </Box>
         )}
