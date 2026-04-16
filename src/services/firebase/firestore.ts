@@ -44,6 +44,14 @@ export interface OwnerProfile {
   updatedAt: string;
 }
 
+export interface CampaignLocationPreference {
+  city: string;
+  area: string;
+  allowNearbyAreas: boolean;
+}
+
+export type CampaignPaymentPlan = 'month_on_month' | 'full_period';
+
 export interface Campaign {
   id: string;
   advertiserId: string;
@@ -52,11 +60,25 @@ export interface Campaign {
   endDate: string;
   durationDays: number;
   objective: string;
-  status: 'draft' | 'pending_payment' | 'active' | 'completed' | 'cancelled';
+  status:
+    | 'draft'
+    | 'submitted_for_review'
+    | 'needs_changes'
+    | 'approved_pending_payment'
+    | 'active'
+    | 'completed'
+    | 'cancelled';
   selectedVehicleIds: string[];
   artworkUrl: string;
   totalCost: number;
   approvals: CampaignApproval[];
+  /** Location preference captured in Step 1 of the booking wizard */
+  locationPreference?: CampaignLocationPreference;
+  /** Whether the advertiser requested printing help (adds platform printing fee) */
+  needsPrintingHelp?: boolean;
+  /** Payment plan chosen after approval */
+  paymentPlan?: CampaignPaymentPlan;
+  printingCost?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -312,6 +334,10 @@ function snapToCampaign(id: string, data: DocumentData): Campaign {
     artworkUrl: data.artworkUrl ?? '',
     totalCost: data.totalCost ?? 0,
     approvals: data.approvals ?? [],
+    locationPreference: data.locationPreference ?? undefined,
+    needsPrintingHelp: data.needsPrintingHelp ?? false,
+    paymentPlan: data.paymentPlan ?? undefined,
+    printingCost: data.printingCost ?? undefined,
     createdAt:
       data.createdAt instanceof Timestamp
         ? data.createdAt.toDate().toISOString()
