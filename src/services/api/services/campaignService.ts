@@ -16,7 +16,14 @@ export interface CreateCampaignData {
 
 export interface Campaign extends CreateCampaignData {
   id: string;
-  status: 'draft' | 'pending_payment' | 'active' | 'completed' | 'cancelled';
+  status:
+    | 'draft'
+    | 'submitted_for_review'
+    | 'needs_changes'
+    | 'approved_pending_payment'
+    | 'active'
+    | 'completed'
+    | 'cancelled';
   approvals: CampaignApproval[];
   createdAt: string;
   updatedAt: string;
