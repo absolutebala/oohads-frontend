@@ -136,7 +136,7 @@ function ownerProfileToEntry(o: OwnerProfile): OwnerEntry {
 function firestoreToCampaignEntry(c: FirestoreCampaign): CampaignEntry {
   const statusMap: Record<string, CampaignEntry['status']> = {
     draft: 'submitted',
-    pending_payment: 'reviewing',
+    approved_pending_payment: 'reviewing',
     active: 'live',
     completed: 'completed',
     cancelled: 'rejected',
@@ -158,7 +158,7 @@ function firestoreToCampaignEntry(c: FirestoreCampaign): CampaignEntry {
 function adminStatusToFirestore(status: CampaignEntry['status']): FirestoreCampaign['status'] {
   const map: Record<string, FirestoreCampaign['status']> = {
     submitted: 'draft',
-    reviewing: 'pending_payment',
+    reviewing: 'approved_pending_payment',
     approved: 'active',
     live: 'active',
     completed: 'completed',
