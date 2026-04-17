@@ -77,7 +77,7 @@ const MOCK_CAMPAIGNS: Campaign[] = [
     endDate: '2024-12-31',
     durationDays: 30,
     objective: 'App Install',
-    status: 'pending_payment',
+    status: 'approved_pending_payment',
     selectedVehicleIds: ['owner-mock-1'],
     artworkUrl: '',
     totalCost: 3200,
